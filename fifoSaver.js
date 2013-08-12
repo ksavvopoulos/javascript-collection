@@ -10,15 +10,17 @@ fifoSaver = {
 		}
 	},
 	saveItem: function(x) {
+		var that;
 		this.pending = true;
+		that = this;
 		return $.ajax({
 			url: "http....",
 			async: true,
 			success: function() {
-				if (saver.toBeSaved.length) {
-					return saver.saveItem(saver.toBeSaved.shift());
+				if (that.toBeSaved.length) {
+					return that.saveItem(that.toBeSaved.shift());
 				} else {
-					return saver.pending = false;
+					return that.pending = false;
 				}
 			}
 		});
