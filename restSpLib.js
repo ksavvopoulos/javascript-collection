@@ -128,16 +128,31 @@
                
                 return getAsync(url);
             },
+            /**
+             * gets a List from the Host Site by the Title of the List
+             * @param  {string} listTitle [the Title of the List]
+             * @param  {string} query     [the query to execute]
+             */
             getHostListByTitle: function (listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
+            /**
+             * gets the Items of a List from the Host Site
+             * @param  {string} listTitle [The Title of the List]
+             * @param  {sting} query     [the query to execute]
+             */
             getHostListItems: function (listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
+            /**
+             * gets the Fields of a List form the Host Site
+             * @param  {string} listTitle [The Title of the List ]
+             * @param  {string} query     [the query to execute]
+             */
             getHostListFields: function (listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Fields?" + query + "&@target='" + hostUrl + "'";
 
@@ -161,16 +176,33 @@
 
                 return createAsync(url,data);
             },
+            /**
+             * adds an item to a Host List
+             * @param {string} listTitle [The Title of the List]
+             * @param {[type]} item      [the item to create. Must have the properties Title and __metadata.
+             * __metadata must be an object with property type and value "SP.Data.LessonsListItem"]
+             */
             addHostListItem: function (listTitle, item) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?&@target='" + hostUrl + "'";
 
                 return createAsync(url, item);
             },
+            /**
+             * deletes an item from List from the Host Site
+             * @param  {string} listTitle [The Title of the List]
+             * @param  {string} itemId    [the id of the item]
+             * @param  {string} etag      [the etag value of the item's __metadata object]
+             */
             deleteHostListItem: function (listTitle,itemId,etag) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?&@target='" + hostUrl + "'";
 
                 return deleteAsync(url,etag);
             },
+            /**
+             * updates an item in a Host List
+             * @param  {string} listTitle [the title of the Host List]
+             * @param  {object} item      [the item to update. Must have the properties Id and __metadata]
+             */
             updateHostListItem: function (listTitle, item) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?&@target='" + hostUrl + "'";
 
