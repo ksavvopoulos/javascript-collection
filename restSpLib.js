@@ -117,6 +117,12 @@
 
     ind =  {
         rest: {
+            /**
+             * gets the Lists of the host Site
+             * @param  {string} query [the query to execute example:"$filter=..."]
+             * example of using the function
+             * ind.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
+             */
             getHostLists: function (query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
                
@@ -137,6 +143,10 @@
 
                 return getAsync(url);
             },
+            /**
+             * create a List at the Host Site
+             * @param  {object} list [the list to create. Must have the properties 'Template' and 'Title']
+             */
             createHostList: function (list) {
                 var data,
                     url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?&@target='" + hostUrl + "'";
