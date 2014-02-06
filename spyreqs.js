@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
     var appUrl, hostUrl, executor, context, factory, queryParams, spyreqs;
-	    
+
 	function urlParamsObj() { 
 	// function returns an object with url parameters
 		if (window.location.search) { // if there are params in URL
@@ -15,11 +15,11 @@
 			} return params;
 		} return null;
 	}
-	
+
 	function getQueryStringParameter(param) {
-	    /* usage if this is not recomended when we need more than one param,
-	    since it calls URLparamsObj for every param asked */ 
-		var a = URLparamsObj();
+    /* usage if this is not recomended when we need more than one param,
+    since it calls URLparamsObj for every param asked */ 
+		var a = urlParamsObj();
 		if (a === null) { return null; }
 		return a.param;
 	}
@@ -117,10 +117,10 @@
 	// get an object with queryString params and their values
     queryParams = urlParamsObj(); 
     
-    appUrl = decodeURIComponent(queryParams.SPAppWebUrl));
+    appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
     if (appUrl.indexOf('#') !== -1) appUrl = appUrl.split('#')[0];
 
-    hostUrl = decodeURIComponent(queryParams.SPHostUrl));
+    hostUrl = decodeURIComponent(queryParams.SPHostUrl);
     executor = new SP.RequestExecutor(appUrl);
     context = SP.ClientContext.get_current();
     factory = SP.ProxyWebRequestExecutorFactory(appUrl);
