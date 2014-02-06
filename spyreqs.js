@@ -1,28 +1,34 @@
-(function (window) {
+(function(window) {
     "use strict";
     var appUrl, hostUrl, executor, context, factory, queryParams, spyreqs;
 
-	function urlParamsObj() { 
-	// function returns an object with url parameters
-		if (window.location.search) { // if there are params in URL
-			var param_array = document.location.search.substring(1).split('&');
-			var params = {};
-			var theLength = param_array.length;
-			var i = 0;
-			for ( ; i < theLength; i++) {
-				var x = param_array[i].toString().split('=');
-				params[x[0]] = x[1];
-			} return params;
-		} return null;
-	}
+    function urlParamsObj() {
+        // function returns an object with url parameters
+        if (window.location.search) { // if there are params in URL
+            var param_array = document.location.search.substring(1).split('&'),
+                params = {},
+                theLength = param_array.length,
+                i = 0,
+                x;
+                
+            for (; i < theLength; i++) {
+                x = param_array[i].toString().split('=');
+                params[x[0]] = x[1];
+            }
+            return params;
+        }
+        return null;
+    }
 
-	function getQueryStringParameter(param) {
-    /* usage if this is not recomended when we need more than one param,
-    since it calls URLparamsObj for every param asked */ 
-		var a = urlParamsObj();
-		if (a === null) { return null; }
-		return a.param;
-	}
+    function getQueryStringParameter(param) {
+        /* usage if this is not recomended when we need more than one param,
+    since it calls URLparamsObj for every param asked */
+        var a = urlParamsObj();
+        if (a === null) {
+            return null;
+        }
+        return a.param;
+    }
 
     function getAsync(url) {
         var defer = new $.Deferred();
@@ -34,10 +40,10 @@
             headers: {
                 Accept: "application/json;odata=verbose"
             },
-            success: function (data) {
+            success: function(data) {
                 defer.resolve(data);
             },
-            fail: function (error) {
+            fail: function(error) {
                 defer.reject(error);
             }
         });
@@ -45,7 +51,7 @@
         return defer.promise();
     }
 
-    function deleteAsync(url,etag) {
+    function deleteAsync(url, etag) {
         var defer = new $.Deferred();
 
         executor.executeAsync({
@@ -56,10 +62,10 @@
                 "X-HTTP-Method": "DELETE",
                 "If-Match": etag
             },
-            success: function () {
+            success: function() {
                 defer.resolve();
             },
-            fail: function (error) {
+            fail: function(error) {
                 defer.reject(error);
             }
         });
@@ -67,7 +73,7 @@
         return defer.promise();
     }
 
-    function updateAsync(url,data) {
+    function updateAsync(url, data) {
         var defer = new $.Deferred();
 
         executor.executeAsync({
@@ -78,12 +84,12 @@
                 "Accept": "application/json;odata=verbose",
                 "Content-Type": "application/json;odata=verbose",
                 "X-HTTP-Method": "MERGE",
-                "If-Match":data.__metadata.etag
+                "If-Match": data.__metadata.etag
             },
-            success: function (data) {
+            success: function(data) {
                 defer.resolve(data);
             },
-            fail: function (error) {
+            fail: function(error) {
                 defer.reject(error);
             }
         });
@@ -98,15 +104,15 @@
         executor.executeAsync({
             url: url,
             method: "POST",
-            body:JSON.stringify(data),
+            body: JSON.stringify(data),
             headers: {
                 Accept: "application/json;odata=verbose",
                 "Content-Type": "application/json;odata=verbose"
             },
-            success: function (data) {
+            success: function(data) {
                 defer.resolve(data);
             },
-            fail: function (error) {
+            fail: function(error) {
                 defer.reject(error);
             }
         });
@@ -114,11 +120,13 @@
         return defer.promise();
     }
 
-	// get an object with queryString params and their values
-    queryParams = urlParamsObj(); 
-    
+    // get an object with queryString params and their values
+    queryParams = urlParamsObj();
+
     appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
-    if (appUrl.indexOf('#') !== -1) appUrl = appUrl.split('#')[0];
+    if (appUrl.indexOf('#') !== -1) {
+        appUrl = appUrl.split('#')[0];   
+    }
 
     hostUrl = decodeURIComponent(queryParams.SPHostUrl);
     executor = new SP.RequestExecutor(appUrl);
@@ -133,9 +141,9 @@
              * example of using the function
              * ind.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
              */
-            getHostLists: function (query) {
+            getHostLists: function(query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
-               
+
                 return getAsync(url);
             },
             /**
@@ -143,7 +151,7 @@
              * @param  {string} listTitle [the Title of the List]
              * @param  {string} query     [the query to execute]
              */
-            getHostListByTitle: function (listTitle, query) {
+            getHostListByTitle: function(listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
@@ -153,7 +161,7 @@
              * @param  {string} listTitle [The Title of the List]
              * @param  {sting} query     [the query to execute]
              */
-            getHostListItems: function (listTitle, query) {
+            getHostListItems: function(listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
@@ -163,7 +171,7 @@
              * @param  {string} listTitle [The Title of the List ]
              * @param  {string} query     [the query to execute]
              */
-            getHostListFields: function (listTitle, query) {
+            getHostListFields: function(listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Fields?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
@@ -172,19 +180,19 @@
              * create a List at the Host Site
              * @param  {object} list [the list to create. Must have the properties 'Template' and 'Title']
              */
-            createHostList: function (list) {
+            createHostList: function(list) {
                 var data,
                     url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?&@target='" + hostUrl + "'";
 
                 data = {
                     "__metadata": {
-                        type:"SP.List"
+                        type: "SP.List"
                     },
-                    BaseTemplate:list.Template,
-                    Title:list.Title
+                    BaseTemplate: list.Template,
+                    Title: list.Title
                 };
 
-                return createAsync(url,data);
+                return createAsync(url, data);
             },
             /**
              * adds an item to a Host List
@@ -192,7 +200,7 @@
              * @param {[type]} item      [the item to create. Must have the properties Title and __metadata.
              * __metadata must be an object with property type and value "SP.Data.LessonsListItem"]
              */
-            addHostListItem: function (listTitle, item) {
+            addHostListItem: function(listTitle, item) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?&@target='" + hostUrl + "'";
 
                 return createAsync(url, item);
@@ -203,26 +211,26 @@
              * @param  {string} itemId    [the id of the item]
              * @param  {string} etag      [the etag value of the item's __metadata object]
              */
-            deleteHostListItem: function (listTitle,itemId,etag) {
+            deleteHostListItem: function(listTitle, itemId, etag) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?&@target='" + hostUrl + "'";
 
-                return deleteAsync(url,etag);
+                return deleteAsync(url, etag);
             },
             /**
              * updates an item in a Host List
              * @param  {string} listTitle [the title of the Host List]
              * @param  {object} item      [the item to update. Must have the properties Id and __metadata]
              */
-            updateHostListItem: function (listTitle, item) {
+            updateHostListItem: function(listTitle, item) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?&@target='" + hostUrl + "'";
 
                 return updateAsync(url, item);
             }
         },
         csom: {
-            createHostList: function (list) {
+            createHostList: function(list) {
                 var appContextSite,
-                    web,listCreationInfo,newList;
+                    web, listCreationInfo, newList;
 
                 context.set_webRequestExecutorFactory(factory);
                 appContextSite = new SP.AppContextSite(context, hostUrl);
@@ -234,7 +242,7 @@
                 listCreationInfo.set_templateType(list.Type);
 
                 newList = web.get_lists().add(listCreationInfo);
-               
+
                 context.load(newList);
                 context.executeQueryAsync(success, fail);
 
@@ -248,7 +256,7 @@
                         '\n' + args.get_stackTrace());
                 }
             },
-            createHostSite: function (webToCreate) {
+            createHostSite: function(webToCreate) {
                 var appContextSite,
                     web, webCreationInfo, newWeb;
 
