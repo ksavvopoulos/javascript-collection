@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
     var appUrl, hostUrl, executor, context, factory, spyreqs;
-    
+	    
 	function URLparamsObj() { 
 	// function returns an object with url parameters
 		if (window.location.search) { // if there are params in URL
@@ -113,7 +113,7 @@
         return defer.promise();
     }
 
-    var queryParams = URLparamsObj(); // λένε ότι πρέπει να είναι new URLparamsObj() τεσπα επιστρεφει ενα obj
+    var queryParams = URLparamsObj(); // returns an object with queryString params and values
     
     appUrl = decodeURIComponent(queryParams.SPAppWebUrl));
     if (appUrl.indexOf('#') !== -1) appUrl = appUrl.split('#')[0];
