@@ -10,7 +10,7 @@
                 theLength = param_array.length,
                 i = 0,
                 x;
-                
+
             for (; i < theLength; i++) {
                 x = param_array[i].toString().split('=');
                 params[x[0]] = x[1];
@@ -120,12 +120,25 @@
         return defer.promise();
     }
 
+    /**
+     * checks if the query argument is a string and if it is not returns an empty string
+     * @param  {string} query [the query to execute]
+     * @return {string}       [the input query or an empty string]
+     */
+    function checkQuery(query) {
+        if (typeof query === 'undefined' || typeof query !== 'string' || !(query instanceof String)) {
+            return '';
+        }
+
+        return query;
+    }
+
     // get an object with queryString params and their values
     queryParams = urlParamsObj();
 
     appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
     if (appUrl.indexOf('#') !== -1) {
-        appUrl = appUrl.split('#')[0];   
+        appUrl = appUrl.split('#')[0];
     }
 
     hostUrl = decodeURIComponent(queryParams.SPHostUrl);
@@ -142,7 +155,10 @@
              * spyreqs.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
              */
             getHostLists: function(query) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
+                var url;
+
+                query = checkQuery(query);
+                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
@@ -152,7 +168,10 @@
              * @param  {string} query     [the query to execute]
              */
             getHostListByTitle: function(listTitle, query) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')?" + query + "&@target='" + hostUrl + "'";
+                var url;
+
+                query = checkQuery(query);
+                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
@@ -162,7 +181,10 @@
              * @param  {string} query     [the query to execute]
              */
             getHostListItems: function(listTitle, query) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
+                var url;
+
+                query = checkQuery(query);
+                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
@@ -172,7 +194,10 @@
              * @param  {string} query     [the query to execute]
              */
             getHostListFields: function(listTitle, query) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Fields?" + query + "&@target='" + hostUrl + "'";
+                var url;
+
+                query = checkQuery(query);
+                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Fields?" + query + "&@target='" + hostUrl + "'";
 
                 return getAsync(url);
             },
