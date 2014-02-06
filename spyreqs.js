@@ -139,7 +139,7 @@
              * gets the Lists of the host Site
              * @param  {string} query [the query to execute example:"$filter=..."]
              * example of using the function
-             * ind.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
+             * spyreqs.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
              */
             getHostLists: function(query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
@@ -159,7 +159,7 @@
             /**
              * gets the Items of a List from the Host Site
              * @param  {string} listTitle [The Title of the List]
-             * @param  {sting} query     [the query to execute]
+             * @param  {string} query     [the query to execute]
              */
             getHostListItems: function(listTitle, query) {
                 var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
@@ -197,7 +197,7 @@
             /**
              * adds an item to a Host List
              * @param {string} listTitle [The Title of the List]
-             * @param {[type]} item      [the item to create. Must have the properties Title and __metadata.
+             * @param {object} item      [the item to create. Must have the properties Title and __metadata.
              * __metadata must be an object with property type and value "SP.Data.LessonsListItem"]
              */
             addHostListItem: function(listTitle, item) {
