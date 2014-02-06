@@ -1,14 +1,15 @@
 (function (window) {
     "use strict";
-    var appUrl, hostUrl, executor, context, factory, spyreqs;
+    var appUrl, hostUrl, executor, context, factory, queryParams, spyreqs;
 	    
-	function URLparamsObj() { 
+	function urlParamsObj() { 
 	// function returns an object with url parameters
 		if (window.location.search) { // if there are params in URL
 			var param_array = document.location.search.substring(1).split('&');
 			var params = {};
 			var theLength = param_array.length;
-			for (var i = 0; i < theLength; i++) {
+			var i = 0;
+			for ( ; i < theLength; i++) {
 				var x = param_array[i].toString().split('=');
 				params[x[0]] = x[1];
 			} return params;
@@ -19,7 +20,7 @@
 	    /* usage if this is not recomended when we need more than one param,
 	    since it calls URLparamsObj for every param asked */ 
 		var a = URLparamsObj();
-		if (a === null) return null;
+		if (a === null) { return null; }
 		return a.param;
 	}
 
@@ -113,7 +114,8 @@
         return defer.promise();
     }
 
-    var queryParams = URLparamsObj(); // returns an object with queryString params and values
+	// get an object with queryString params and their values
+    queryParams = urlParamsObj(); 
     
     appUrl = decodeURIComponent(queryParams.SPAppWebUrl));
     if (appUrl.indexOf('#') !== -1) appUrl = appUrl.split('#')[0];
