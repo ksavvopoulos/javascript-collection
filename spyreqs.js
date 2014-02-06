@@ -2,8 +2,8 @@
     "use strict";
     var appUrl, hostUrl, executor, context, factory, spyreqs;
     
-    function URLparamsObj() { 
-		// function returns an object with url parameters
+	function URLparamsObj() { 
+	// function returns an object with url parameters
 		if (window.location.search) { // if there are params in URL
 			var param_array = document.location.search.substring(1).split('&');
 			var params = {};
@@ -17,11 +17,11 @@
 	
 	function getQueryStringParameter(param) {
 	    /* usage if this is not recomended when we need more than one param,
-	       since it calls URLparamsObj for every param asked */ 
+	    since it calls URLparamsObj for every param asked */ 
 		var a = URLparamsObj();
 		if (a === null) return null;
 		return a.param;
-    }
+	}
 
     function getAsync(url) {
         var defer = new $.Deferred();
