@@ -1,17 +1,26 @@
 (function (window) {
     "use strict";
-    var appUrl, hostUrl, executor, context, factory,ind;
+    var appUrl, hostUrl, executor, context, factory, spyreqs;
     
-    function getQueryStringParameter(param) {
-        var params = document.URL.split("?")[1].split("&"),
-            i, singleParam;
-
-        for (i = 0; i < params.length; i = i + 1) {
-            singleParam = params[i].split("=");
-            if (singleParam[0] === param) {
-                return singleParam[1];
-            }
-        }
+    function URLparamsObj() { 
+		// function returns an object with url parameters
+		if (window.location.search) { // if there are params in URL
+			var param_array = document.location.search.substring(1).split('&');
+			var params = {};
+			var theLength = param_array.length;
+			for (var i = 0; i < theLength; i++) {
+				var x = param_array[i].toString().split('=');
+				params[x[0]] = x[1];
+			} return params;
+		} return null;
+	}
+	
+	function getQueryStringParameter(param) {
+	    /* usage if this is not recomended when we need more than one param,
+	       since it calls URLparamsObj for every param asked */ 
+		var a = URLparamsObj();
+		if (a === null) return null;
+		return a.param;
     }
 
     function getAsync(url) {
@@ -104,18 +113,17 @@
         return defer.promise();
     }
 
-    appUrl = decodeURIComponent(getQueryStringParameter('SPAppWebUrl'));
+    var queryParams = URLparamsObj(); // λένε ότι πρέπει να είναι new URLparamsObj() τεσπα επιστρεφει ενα obj
+    
+    appUrl = decodeURIComponent(queryParams.SPAppWebUrl));
+    if (appUrl.indexOf('#') !== -1) appUrl = appUrl.split('#')[0];
 
-    if (appUrl.indexOf('#') !== -1) {
-        appUrl = appUrl.split('#')[0];
-    }
-
-    hostUrl = decodeURIComponent(getQueryStringParameter('SPHostUrl'));
+    hostUrl = decodeURIComponent(queryParams.SPHostUrl));
     executor = new SP.RequestExecutor(appUrl);
     context = SP.ClientContext.get_current();
     factory = SP.ProxyWebRequestExecutorFactory(appUrl);
 
-    ind =  {
+    spyreqs = {
         rest: {
             /**
              * gets the Lists of the host Site
@@ -273,6 +281,6 @@
         }
     };
 
-    window.ind = ind;
+    window.spyreqs = spyreqs;
 
 }(window));
