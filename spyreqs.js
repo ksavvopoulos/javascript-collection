@@ -41,7 +41,7 @@
                 Accept: "application/json;odata=verbose"
             },
             success: function(data) {
-                defer.resolve(data);
+                defer.resolve(JSON.parse(data.body));
             },
             fail: function(error) {
                 defer.reject(error);
@@ -62,8 +62,9 @@
                 "X-HTTP-Method": "DELETE",
                 "If-Match": etag
             },
-            success: function() {
-                defer.resolve();
+            success: function(data) {
+                //data.body is an empty string
+                defer.resolve(data);
             },
             fail: function(error) {
                 defer.reject(error);
@@ -87,6 +88,7 @@
                 "If-Match": data.__metadata.etag
             },
             success: function(data) {
+                //data.body is an empty string
                 defer.resolve(data);
             },
             fail: function(error) {
@@ -110,7 +112,7 @@
                 "Content-Type": "application/json;odata=verbose"
             },
             success: function(data) {
-                defer.resolve(data);
+                defer.resolve(JSON.parse(data.body));
             },
             fail: function(error) {
                 defer.reject(error);
