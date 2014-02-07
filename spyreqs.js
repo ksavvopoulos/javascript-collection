@@ -126,7 +126,7 @@
      * @return {string}       [the input query or an empty string]
      */
     function checkQuery(query) {
-        if (typeof query === 'undefined' || typeof query !== 'string' || !(query instanceof String)) {
+        if (typeof query === 'undefined' || (typeof query !== 'string' && !(query instanceof String))) {
             return '';
         }
 
