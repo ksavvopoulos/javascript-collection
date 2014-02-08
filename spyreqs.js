@@ -1,6 +1,9 @@
 (function(window) {
     "use strict";
-    var appUrl, hostUrl, executor, context, factory, queryParams, spyreqs;
+    var appUrl, hostUrl, executor,
+        context, factory, queryParams,
+        baseUrl, targetStr,
+        spyreqs;
 
     function urlParamsObj() {
         // function returns an object with url parameters
@@ -144,6 +147,10 @@
     }
 
     hostUrl = decodeURIComponent(queryParams.SPHostUrl);
+
+    targetStr = "&@target='" + hostUrl + "'";
+    baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
+
     executor = new SP.RequestExecutor(appUrl);
     context = SP.ClientContext.get_current();
     factory = SP.ProxyWebRequestExecutorFactory(appUrl);
@@ -160,7 +167,7 @@
                 var url;
 
                 query = checkQuery(query);
-                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?" + query + "&@target='" + hostUrl + "'";
+                url = baseUrl + "web/lists?" + query + targetStr;
 
                 return getAsync(url);
             },
@@ -173,7 +180,7 @@
                 var url;
 
                 query = checkQuery(query);
-                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')?" + query + "&@target='" + hostUrl + "'";
+                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')?" + query + targetStr;
 
                 return getAsync(url);
             },
@@ -186,7 +193,7 @@
                 var url;
 
                 query = checkQuery(query);
-                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?" + query + "&@target='" + hostUrl + "'";
+                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + query + targetStr;
 
                 return getAsync(url);
             },
@@ -199,7 +206,7 @@
                 var url;
 
                 query = checkQuery(query);
-                url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Fields?" + query + "&@target='" + hostUrl + "'";
+                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields?" + query + targetStr;
 
                 return getAsync(url);
             },
@@ -209,7 +216,7 @@
              */
             createHostList: function(list) {
                 var data,
-                    url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists?&@target='" + hostUrl + "'";
+                    url = baseUrl + "web/lists?" + targetStr;
 
                 data = {
                     "__metadata": {
@@ -228,7 +235,7 @@
              * __metadata must be an object with property type and value "SP.Data.LessonsListItem"]
              */
             addHostListItem: function(listTitle, item) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items?&@target='" + hostUrl + "'";
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + targetStr;
 
                 return createAsync(url, item);
             },
@@ -239,7 +246,7 @@
              * @param  {string} etag      [the etag value of the item's __metadata object]
              */
             deleteHostListItem: function(listTitle, itemId, etag) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?&@target='" + hostUrl + "'";
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?" + targetStr;
 
                 return deleteAsync(url, etag);
             },
@@ -249,9 +256,29 @@
              * @param  {object} item      [the item to update. Must have the properties Id and __metadata]
              */
             updateHostListItem: function(listTitle, item) {
-                var url = appUrl + "/_api/SP.AppContextSite(@target)/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?&@target='" + hostUrl + "'";
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?" + targetStr;
 
                 return updateAsync(url, item);
+            },
+            /**
+             * adds a field to a Host List
+             * @param {string} listGuid [the guid of the list]
+             * @param {object} field    [the field to add]
+             * field must have the properties :
+             *      'Title': 'field title',
+             *      'FieldTypeKind': FieldType value,
+             *      'Required': 'true/false',
+             *      'EnforceUniqueValues': 'true/false',
+             *      'StaticName': 'field name'
+             */
+            addHostListField: function(listGuid, field) {
+                var url = baseUrl + "web/lists(guid'" + listGuid + "')/Fields?" + targetStr;
+
+                field['__metadata'] = {
+                    type: 'SP.Field'
+                };
+
+                return createAsync(url, field);
             }
         },
         csom: {
