@@ -264,18 +264,21 @@
              * adds a field to a Host List
              * @param {string} listGuid [the guid of the list]
              * @param {object} field    [the field to add]
+             * @param {string} fieldType [otional fieldType.If not provided defaults to SP.Field]
              * field must have the properties :
              *      'Title': 'field title',
-             *      'FieldTypeKind': FieldType value,
-             *      'Required': 'true/false',
-             *      'EnforceUniqueValues': 'true/false',
+             *      'FieldTypeKind': FieldType value,{int}
+             *      'Required': true/false,
+             *      'EnforceUniqueValues': true/false,
              *      'StaticName': 'field name'
+             * information about FieldTypeKind :
+             *     http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.client.fieldtype.aspx
              */
-            addHostListField: function(listGuid, field) {
+            addHostListField: function(listGuid, field, fieldType) {
                 var url = baseUrl + "web/lists(guid'" + listGuid + "')/Fields?" + targetStr;
 
                 field['__metadata'] = {
-                    type: 'SP.Field'
+                    type: (typeof fieldType !== 'undefined') ? fieldType : 'SP.Field'
                 };
 
                 return createAsync(url, field);
