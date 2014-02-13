@@ -1,8 +1,7 @@
 (function(window) {
     "use strict";
     var appUrl, hostUrl, queryParams,
-		executor, context, factory, appContextSite,
-        baseUrl, targetStr,
+		executor, baseUrl, targetStr,
         spyreqs;    
 
     function getAsync(url) {
@@ -104,6 +103,22 @@
         return query;
     }
 
+	function newContextInstance () {
+		// for jsom use. Return an object with new instances for clear async requests
+		var returnObj = {}, context, factory, appContextSite;
+		
+		context = new SP.ClientContext(appUrl); 
+		factory = new SP.ProxyWebRequestExecutorFactory(appUrl);
+		context.set_webRequestExecutorFactory(factory);
+		appContextSite = new SP.AppContextSite(context, hostUrl);
+		
+		returnObj.context = context;
+		returnObj.factory = factory;
+		returnObj.appContextSite = appContextSite;
+		
+		return returnObj;
+	}
+	
     spyreqs = {
         rest: {
             /**
@@ -235,19 +250,22 @@
         },
         jsom: {
             checkHostList: function(listObj) {
-				// This function checks if listObj.Title exists.
+				// This function checks if list.Title exists.
 				/* syntax example: 
 				spyreqs.jsom.checkHostList({ "Title":listName }).then(
 					function(listExistsBool) { alert(listExistsBool); // true or false },
 					function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
 				);	
 				*/
-                var web, collectionList, defer = new $.Deferred();
-					
-				web = appContextSite.get_web();	 
+                var web, collectionList, 
+					defer = new $.Deferred(),
+					c = newContextInstance();
+				
+				web = c.appContextSite.get_web();	 
                 collectionList = web.get_lists();
-				context.load(collectionList);
-                context.executeQueryAsync(success, fail); 
+				// this will only load Title, no other list properties
+				c.context.load(collectionList, 'Include(Title)'); 
+                c.context.executeQueryAsync(success, fail); 
 				
                 function success() {
 					var listInfo = '', answerBool = false,
@@ -270,12 +288,12 @@
 				
 				return defer.promise();
 			},			
-			getHostList: function(listObj) {
-			    // NOT PROMISE READY
-				// use listObj.TemplateName (string) OR listObj.Type (int) to define list template
-                var web, theList;               
+			getHostListByTitle: function(listTitle, query) {
+				// NOT READY			
+                var web, theList, defer = new $.Deferred(),
+					c = newContextInstance();       
                 
-                web = appContextSite.get_web();	 
+                web = c.appContextSite.get_web();	 
 				theList = web.get_lists().getByTitle(listObj.Title);
                 context.load(theList);
                 context.executeQueryAsync(success, fail);
@@ -288,9 +306,41 @@
                 function fail(sender, args) {
                     alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
                 }
-			},			
+			},		
+			addHostListItem: function(listTitle, itemObj) {
+				/* example: 
+				spyreqs.jsom.addHostListItem("My List", {"Title":"my item", "Score":90}).then(
+					function(itemId) { alert("item was added, id:"+itemId); },
+					function(error) { alert('addHostListItem request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
+				); 			
+				*/
+				var web, theList, theListItem, prop, itemCreateInfo, 
+					defer = new $.Deferred(), c = newContextInstance();      
+			
+				web = c.appContextSite.get_web();
+				theList = web.get_lists().getByTitle(listTitle);        
+				itemCreateInfo = new SP.ListItemCreationInformation();
+				theListItem = theList.addItem(itemCreateInfo);
+				for (prop in itemObj) {
+					theListItem.set_item(prop, itemObj[prop] );
+				}				
+				theListItem.update();
+				c.context.load(theListItem); 
+                c.context.executeQueryAsync(success, fail); 
+				
+                function success() {
+					defer.resolve(theListItem.get_id());
+                }
+
+                function fail(sender, args) {
+					var error = {sender: sender, args: args};                    
+					defer.reject(error);
+                }
+				
+				return defer.promise();
+			},
             createHostList: function(listObj) {
-                // NOT PROMISE READY
+				// NOT READY
 				// use listObj.TemplateName (string) OR listObj.Type (int) to define list template
                 var web, listCreationInfo, 
 					listTemplates, templateId,
@@ -329,7 +379,7 @@
                 }
             },
             createHostSite: function(webToCreate) {
-                // NOT PROMISE READY
+				// NOT READY
                 var  web, webCreationInfo, newWeb;
 
                 web = appContextSite.get_web();
@@ -397,13 +447,9 @@
 
     hostUrl = decodeURIComponent(queryParams.SPHostUrl);
     targetStr = "&@target='" + hostUrl + "'";
-    baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
-	
-    executor = new SP.RequestExecutor(appUrl);
-    context = SP.ClientContext.get_current();
-    factory = SP.ProxyWebRequestExecutorFactory(appUrl);
-	context.set_webRequestExecutorFactory(factory);
-    appContextSite = new SP.AppContextSite(context, hostUrl);
+    baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";	
+    executor = new SP.RequestExecutor(appUrl); // for rest use
+    
 	
 	// liberate scope...
     window.spyreqs = spyreqs;
