@@ -2,7 +2,7 @@
     "use strict";
     var appUrl, hostUrl, queryParams,
         executor, baseUrl, targetStr,
-        spyreqs, say;
+        spyreqs, say, rest;
 
     if (typeof window.console !== 'undefined') {
         say = function(what) {
@@ -167,6 +167,31 @@
     baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
     executor = new SP.RequestExecutor(appUrl); // for rest use
 
+    /**
+     * the rest object has methods that are not to be exposed and are used
+     * only from the spyreqs.rest methods
+     */
+    rest = {
+        createList: function(url, list) {
+            var data = {
+                "__metadata": {
+                    type: "SP.List"
+                },
+                BaseTemplate: list.Template,
+                Title: list.Title
+            };
+
+            return createAsync(url, data);
+        },
+        addListField: function(url, field, fieldType) {
+            field.__metadata = {
+                type: (typeof fieldType !== 'undefined') ? fieldType : 'SP.Field'
+            };
+
+            return createAsync(url, field);
+        }
+    };
+
     spyreqs = {
         rest: {
             /**
@@ -176,10 +201,12 @@
              * spyreqs.rest.getHostLists("$select=...").then(function(data){//doSomething with the data},function(error){//handle the error});
              */
             getHostLists: function(query) {
-                var url;
+                var url = baseUrl + "web/lists?" + checkQuery(query) + targetStr;
 
-                query = checkQuery(query);
-                url = baseUrl + "web/lists?" + query + targetStr;
+                return getAsync(url);
+            },
+            getAppLists: function(query) {
+                var url = appUrl + "/_api/web/lists?" + checkQuery(query);
 
                 return getAsync(url);
             },
@@ -189,10 +216,7 @@
              * @param  {string} query     [the query to execute]
              */
             getHostListByTitle: function(listTitle, query) {
-                var url;
-
-                query = checkQuery(query);
-                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')?" + query + targetStr;
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')?" + checkQuery(query) + targetStr;
 
                 return getAsync(url);
             },
@@ -201,11 +225,18 @@
              * @param  {string} listTitle [The Title of the List]
              * @param  {string} query     [the query to execute]
              */
-            getHostListItems: function(listTitle, query) {
-                var url;
+            getAppListByTitle: function(listTitle, query) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')?" + checkQuery(query);
 
-                query = checkQuery(query);
-                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + query + targetStr;
+                return getAsync(url);
+            },
+            getHostListItems: function(listTitle, query) {
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + checkQuery(query) + targetStr;
+
+                return getAsync(url);
+            },
+            getAppListItems: function(listTitle, query) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items?" + checkQuery(query);
 
                 return getAsync(url);
             },
@@ -215,10 +246,12 @@
              * @param  {string} query     [the query to execute]
              */
             getHostListFields: function(listTitle, query) {
-                var url;
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields?" + checkQuery(query) + targetStr;
 
-                query = checkQuery(query);
-                url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields?" + query + targetStr;
+                return getAsync(url);
+            },
+            getAppListFields: function(listTitle, query) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Fields?" + checkQuery(query);
 
                 return getAsync(url);
             },
@@ -227,18 +260,14 @@
              * @param  {object} list [the list to create. Must have the properties 'Template' and 'Title']
              */
             createHostList: function(list) {
-                var data,
-                    url = baseUrl + "web/lists?" + targetStr;
+                var url = baseUrl + "web/lists?" + targetStr;
 
-                data = {
-                    "__metadata": {
-                        type: "SP.List"
-                    },
-                    BaseTemplate: list.Template,
-                    Title: list.Title
-                };
+                return rest.createList(url, list);
+            },
+            createAppList: function(list) {
+                var url = appUrl + "/_api/web/lists?";
 
-                return createAsync(url, data);
+                return rest.createList(url, list);
             },
             /**
              * adds an item to a Host List
@@ -248,6 +277,11 @@
              */
             addHostListItem: function(listTitle, item) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + targetStr;
+
+                return createAsync(url, item);
+            },
+            addAppListItem: function(listTitle, item) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items?";
 
                 return createAsync(url, item);
             },
@@ -262,6 +296,11 @@
 
                 return deleteAsync(url, etag);
             },
+            deleteAppListItem: function(listTitle, itemId, etag) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?";
+
+                return deleteAsync(url, etag);
+            },
             /**
              * updates an item in a Host List
              * @param  {string} listTitle [the title of the Host List]
@@ -269,6 +308,11 @@
              */
             updateHostListItem: function(listTitle, item) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?" + targetStr;
+
+                return updateAsync(url, item);
+            },
+            updateAppListItem: function(listTitle, item) {
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?";
 
                 return updateAsync(url, item);
             },
@@ -289,22 +333,23 @@
             addHostListField: function(listGuid, field, fieldType) {
                 var url = baseUrl + "web/lists(guid'" + listGuid + "')/Fields?" + targetStr;
 
-                field.__metadata = {
-                    type: (typeof fieldType !== 'undefined') ? fieldType : 'SP.Field'
-                };
+                return rest.addListField(url, field, fieldType);
+            },
+            addAppListField: function(listGuid, field, fieldType) {
+                var url = appUrl + "/_api/web/lists(guid'" + listGuid + "')/Fields?";
 
-                return createAsync(url, field);
+                return rest.addListField(url, field, fieldType);
             }
         },
         jsom: {
             checkHostList: function(listObj) {
                 // This function checks if list.Title exists.
                 /* syntax example: 
-				spyreqs.jsom.checkHostList({ "Title":listName }).then(
-					function(listExistsBool) { alert(listExistsBool); // true or false },
-					function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
-				);	
-				*/
+                spyreqs.jsom.checkHostList({ "Title":listName }).then(
+                    function(listExistsBool) { alert(listExistsBool); // true or false },
+                    function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
+                );  
+                */
                 var web, collectionList,
                     defer = new $.Deferred(),
                     c = newContextInstance();
@@ -341,7 +386,7 @@
                 return defer.promise();
             },
             getHostListByTitle: function(listTitle, query) {
-                // NOT READY			
+                // NOT READY            
                 var web, theList, defer = new $.Deferred(),
                     c = newContextInstance();
 
@@ -361,11 +406,11 @@
             },
             addHostListItem: function(listTitle, itemObj) {
                 /* example: 
-				spyreqs.jsom.addHostListItem("My List", {"Title":"my item", "Score":90}).then(
-					function(itemId) { alert("item was added, id:"+itemId); },
-					function(error) { alert('addHostListItem request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
-				);	
-				*/
+                spyreqs.jsom.addHostListItem("My List", {"Title":"my item", "Score":90}).then(
+                    function(itemId) { alert("item was added, id:"+itemId); },
+                    function(error) { alert('addHostListItem request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
+                );  
+                */
                 var web, theList, theListItem, prop, itemCreateInfo,
                     defer = new $.Deferred(),
                     c = newContextInstance();
