@@ -2,42 +2,28 @@
     "use strict";
     var appUrl, hostUrl, queryParams,
         executor, baseUrl, targetStr,
-        spyreqs, say, rest;
+        spyreqs, say, rest, jsom;
 
     if (typeof window.console !== 'undefined') {
-        say = function(what) {
-            window.console.log(what);
-        };
+        say = function(what) { window.console.log(what); };
     } else if ((typeof window.top !== 'undefined') && (typeof window.top.console !== 'undefined')) {
-        say = function(what) {
-            window.top.console.log(what);
-        };
+        say = function(what) { window.top.console.log(what); };
     } else if ((typeof window.opener !== 'undefined') && (typeof window.opener.console !== 'undefined')) {
-        say = function(what) {
-            window.opener.console.log(what);
-        };
-    } else {
-        say = function() {
-            //do nothing
-        };
-    }
+        say = function(what) { window.opener.console.log(what); };
+    } else { say = function() {}; }
 
     function getAsync(url) {
         var defer = new $.Deferred();
-
+		
         executor.executeAsync({
-            url: url,
-            method: "GET",
-            dataType: "json",
+            url: url, method: "GET", dataType: "json",
             headers: {
                 Accept: "application/json;odata=verbose"
             },
             success: function(data) {
                 defer.resolve(JSON.parse(data.body));
             },
-            fail: function(error) {
-                defer.reject(error);
-            }
+            fail: function(error) { defer.reject(error); }
         });
         return defer.promise();
     }
@@ -133,7 +119,6 @@
         returnObj.context = context;
         returnObj.factory = factory;
         returnObj.appContextSite = appContextSite;
-
         return returnObj;
     }
 
@@ -142,9 +127,7 @@
         if (window.location.search) { // if there are params in URL
             var param_array = document.location.search.substring(1).split('&'),
                 theLength = param_array.length,
-                params = {},
-                i = 0,
-                x;
+                params = {}, i = 0, x;
 
             for (; i < theLength; i++) {
                 x = param_array[i].toString().split('=');
@@ -157,10 +140,7 @@
 
     queryParams = urlParamsObj();
     appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
-
-    if (appUrl.indexOf('#') !== -1) {
-        appUrl = appUrl.split('#')[0];
-    }
+    if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }
 
     hostUrl = decodeURIComponent(queryParams.SPHostUrl);
     targetStr = "&@target='" + hostUrl + "'";
@@ -180,18 +160,76 @@
                 BaseTemplate: list.Template,
                 Title: list.Title
             };
-
             return createAsync(url, data);
         },
         addListField: function(url, field, fieldType) {
             field.__metadata = {
                 type: (typeof fieldType !== 'undefined') ? fieldType : 'SP.Field'
             };
-
             return createAsync(url, field);
         }
     };
-
+	jsom = {
+		createListFields : function (context, SPlist, fieldsObj) {			
+			var field, defer, result; 
+			
+			field = fieldsObj.shift();
+			createListField();
+			
+			function createListField() {
+				var xmlStr,	choice, attr;
+				
+				if (typeof defer === 'undefined') {
+					defer = new $.Deferred();
+				}				
+				if (typeof field.Type === 'undefined') { 
+					field.Type = "Text";
+				}
+				if (typeof field.DisplayName === 'undefined') { 
+					field.DisplayName = field.Name;
+				}
+				if (field.Type !== 'Lookup') {
+					xmlStr = '<Field ';
+					for (attr in field) {
+						if (attr !== 'choices') {
+							xmlStr += attr + '="' + field[attr] + '" ';												
+						}
+					}
+					xmlStr += '>';
+					if (field.Type === 'Choice') {	
+						xmlStr += '<CHOICES>';					
+						for (choice in field.choices) {
+							xmlStr += '<CHOICE>' + field.choices[choice] + '</CHOICE>';
+						}
+						xmlStr += '</CHOICES>';
+					}
+					xmlStr += '</Field>';
+				} else {
+					xmlStr += '';
+				}
+				result = SPlist.get_fields().addFieldAsXml(xmlStr, true, SP.AddFieldOptions.defaultValue);
+				context.load(SPlist);
+				context.executeQueryAsync(success, fail);
+			}
+			
+			function success() {
+				if (fieldsObj.length > 0) {
+					field = fieldsObj.shift();
+					createListField();
+				} else {
+					defer.resolve(result);
+				}
+			}
+			
+			function fail(sender, args) {
+				var error = { sender : sender, args : args };
+				defer.reject(error);
+			}
+			
+			return defer.promise();
+		}
+	};
+	
     spyreqs = {
         rest: {
             /**
@@ -202,12 +240,10 @@
              */
             getHostLists: function(query) {
                 var url = baseUrl + "web/lists?" + checkQuery(query) + targetStr;
-
                 return getAsync(url);
             },
             getAppLists: function(query) {
                 var url = appUrl + "/_api/web/lists?" + checkQuery(query);
-
                 return getAsync(url);
             },
             /**
@@ -217,7 +253,6 @@
              */
             getHostListByTitle: function(listTitle, query) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')?" + checkQuery(query) + targetStr;
-
                 return getAsync(url);
             },
             /**
@@ -227,17 +262,14 @@
              */
             getAppListByTitle: function(listTitle, query) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')?" + checkQuery(query);
-
                 return getAsync(url);
             },
             getHostListItems: function(listTitle, query) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + checkQuery(query) + targetStr;
-
                 return getAsync(url);
             },
             getAppListItems: function(listTitle, query) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items?" + checkQuery(query);
-
                 return getAsync(url);
             },
             /**
@@ -247,7 +279,6 @@
              */
             getHostListFields: function(listTitle, query) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields?" + checkQuery(query) + targetStr;
-
                 return getAsync(url);
             },
             getAppListFields: function(listTitle, query) {
@@ -261,12 +292,10 @@
              */
             createHostList: function(list) {
                 var url = baseUrl + "web/lists?" + targetStr;
-
                 return rest.createList(url, list);
             },
             createAppList: function(list) {
                 var url = appUrl + "/_api/web/lists?";
-
                 return rest.createList(url, list);
             },
             /**
@@ -277,12 +306,10 @@
              */
             addHostListItem: function(listTitle, item) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items?" + targetStr;
-
                 return createAsync(url, item);
             },
             addAppListItem: function(listTitle, item) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items?";
-
                 return createAsync(url, item);
             },
             /**
@@ -293,12 +320,10 @@
              */
             deleteHostListItem: function(listTitle, itemId, etag) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?" + targetStr;
-
                 return deleteAsync(url, etag);
             },
             deleteAppListItem: function(listTitle, itemId, etag) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + itemId + ")?";
-
                 return deleteAsync(url, etag);
             },
             /**
@@ -308,12 +333,10 @@
              */
             updateHostListItem: function(listTitle, item) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?" + targetStr;
-
                 return updateAsync(url, item);
             },
             updateAppListItem: function(listTitle, item) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?";
-
                 return updateAsync(url, item);
             },
             /**
@@ -332,12 +355,10 @@
              */
             addHostListField: function(listGuid, field, fieldType) {
                 var url = baseUrl + "web/lists(guid'" + listGuid + "')/Fields?" + targetStr;
-
                 return rest.addListField(url, field, fieldType);
             },
             addAppListField: function(listGuid, field, fieldType) {
                 var url = appUrl + "/_api/web/lists(guid'" + listGuid + "')/Fields?";
-
                 return rest.addListField(url, field, fieldType);
             }
         },
@@ -431,52 +452,97 @@
                 }
 
                 function fail(sender, args) {
-                    var error = {
-                        sender: sender,
-                        args: args
-                    };
+                    var error = { sender: sender, args: args };
                     defer.reject(error);
                 }
 
                 return defer.promise();
             },
             createHostList: function(listObj) {
-                // NOT READY
-                // use listObj.TemplateName (string) OR listObj.Type (int) to define list template
-                var web, listCreationInfo,
-                    listTemplates, templateId,
-                    newList, listType;
-
-                web = appContextSite.get_web();
-                listCreationInfo = new SP.ListCreationInformation();
-                listCreationInfo.set_title(listObj.Title);
-
-                if (typeof listObj.TemplateName !== 'undefined') {
-                    // prefer TemplateName if exists
-                    listTemplates = web.get_listTemplates();
-                    templateId = listTemplates.getByName(listObj.TemplateName);
-                    listType = templateId;
-                } else if (typeof listObj.Type !== 'undefined') {
-                    listType = listObj.Type;
-                } else {
-                    // use generic list id
-                    listType = 100;
-                }
-
-                listCreationInfo.set_templateType(listType);
-                newList = web.get_lists().add(listCreationInfo);
-                context.load(newList);
-                context.executeQueryAsync(success, fail);
-
-                function success() {
-                    var result = newList.get_title() + ' created.';
-                    alert(result);
-                }
-
-                function fail(sender, args) {
-                    alert('Request failed. ' + args.get_message() +
-                        '\n' + args.get_stackTrace());
-                }
+				/* syntax example:
+					spyreqs.jsom.createHostList({
+						"title":app_MainListName,	 
+						"url":app_MainListName, 
+						"template" : "genericList",
+						"description" : "this is a list", 
+							fields : [	 
+								{"Name":"userId", "Type":"Text", "Required":"true"},
+								{"Name":"testId", "Type":"Text", "Required":"True"},	
+								{"Name":"courseId", "Type":"Text"}, 
+								{"Name":"periodId", "Type":"Text"},
+								{"Name":"score", "Type":"Number"}, 
+								{"Name":"scoreFinal", "Type":"Number", "hidden":"true"},
+								{"Name":"assginedTo", "Type":"User", "Required":"true"},
+								{"Name":"dateAssgined", "Type":"DateTime"},
+								{"Name":"dateEnded", "Type":"DateTime"},
+								{"Name":"canRetry", "Type":"Boolean"},
+								{"Name":"state", "Type":"Choice", "choices" : ["rejected", "approved", "passed", "proggress"]},
+								{"Name":"comments", "Type":"Note"},
+								{"Name":"assginedFrom", "Type":"User"},
+								{"Name":"testLink", "Type":"URL"}
+							]	 
+						})
+					.then( ...... )				
+					field properties: http://msdn.microsoft.com/en-us/library/office/jj246815.aspx
+				*/
+                var web, theList, listCreationInfo, template, field,
+					defer = new $.Deferred(),
+					c = newContextInstance();
+					
+				if (typeof listObj.title === 'undefined') {
+					say('createHostList cannot create without .title');
+					return;
+				}
+				web = c.appContextSite.get_web();
+				listCreationInfo = new SP.ListCreationInformation();
+				listCreationInfo.set_title(listObj.title);
+				
+				if (typeof listObj.url !== 'undefined') { listCreationInfo.set_url(listObj.url); }
+				if (typeof listObj.description !== 'undefined') { listCreationInfo.set_description(listObj.description); }
+				
+				if (typeof listObj.template === 'undefined') {
+					template = SP.ListTemplateType.genericList;
+				} else if (isNaN(listObj.template)) {
+					template = SP.ListTemplateType[listObj.template];
+				} else {
+					template = listObj.template;
+				}
+				
+				listCreationInfo.set_templateType(template);
+				//say("list template number: " + template);
+				if (typeof listObj.quickLaunchOption !== 'undefined') {
+					// option to show list in quick actions menu
+					listCreationInfo.set_quickLaunchOption(listObj.quickLaunchOption);
+				}
+				theList = web.get_lists().add(listCreationInfo);
+				c.context.load(theList);
+				c.context.executeQueryAsync(success, fail);
+				
+				function success() {
+					// list created
+					if (listObj.fields) {
+						// start creating fields
+						$.when(jsom.createListFields(c.context, theList, listObj.fields)).then(
+							function (data) {
+								// create List Fields finished
+								defer.resolve(listObj);
+							},
+							function (error) {
+								defer.reject(error);								
+							} 
+						);
+					} else {
+						// no fields to create
+						defer.resolve(listObj);
+					}
+				}
+				
+				function fail(sender, args) {
+					var error = { sender : sender, args : args };
+					defer.reject(error);
+				}
+				
+				return defer.promise();				
             },
             createHostSite: function(webToCreate) {
                 // NOT READY
