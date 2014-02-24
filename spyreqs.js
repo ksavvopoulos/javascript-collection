@@ -360,6 +360,10 @@
             addAppListField: function(listGuid, field, fieldType) {
                 var url = appUrl + "/_api/web/lists(guid'" + listGuid + "')/Fields?";
                 return rest.addListField(url, field, fieldType);
+            },
+            getCurrentUser:function(){
+                var url = baseUrl+"/web/CurrentUser?"+targetStr;
+                return getAsync(url);
             }
         },
         jsom: {
