@@ -29,7 +29,7 @@
     }
 
     function getFile(url) {
-        var defer = new $.Deferred();            
+        var defer = new $.Deferred();
 
         executor.executeAsync({
             url: url, method: "GET",
@@ -41,11 +41,11 @@
         return defer.promise();
     }
 
-    function addFile(url,file) {
+    function addFile(url, file) {
         var defer = new $.Deferred();
 
         executor.executeAsync({
-            url:url,
+            url: url,
             method: "POST",
             headers: {
                 "Accept": "application/json; odata=verbose"
@@ -95,7 +95,7 @@
                 "Accept": "application/json;odata=verbose",
                 "Content-Type": "application/json;odata=verbose",
                 "X-HTTP-Method": "MERGE",
-                "If-Match": (data.__metadata && data.__metadata.etag)?data.__metadata.etag:"*"
+                "If-Match": (data.__metadata && data.__metadata.etag) ? data.__metadata.etag : "*"
             },
             success: function (data) {
                 //data.body is an empty string
@@ -170,6 +170,26 @@
             return params;
         }
         return null;
+    }
+
+    function buildQueryString(str, param, val) {
+        // function returns string with str parameters plus the given parameter. works even param already exists in str
+        var ind = str.indexOf('?');
+        if (ind > -1) {
+            var param_array = str.substring(ind + 1).split('&');
+            var params = {};
+            var theLength = param_array.length;
+            for (var i = 0; i < theLength; i++) {
+                var x = param_array[i].toString().split('=');
+                params[x[0]] = x[1];
+            }
+            params[param] = val;
+            var attached = "?";
+            for (var key in params) {
+                attached += key + "=" + params[key] + "&";
+            } attached = attached.substr(0, attached.length - 1);
+            return String(str.substr(0, ind) + attached);
+        } return String(str + "?" + param + "=" + val);
     }
 
     queryParams = urlParamsObj();
@@ -363,7 +383,17 @@
             /**
              * updates an item in a Host List
              * @param  {string} listTitle [the title of the Host List]
-             * @param  {object} item      [the item to update. Must have the properties Id and __metadata]
+             * @param  {object} item      [the item to update. Must have the properties Id and __metadata]       
+             * var item = {
+             *   "__metadata": {
+             *       type: "SP.Data.DemodemoListItem",//prepei na breis gia th lista to sygkekrimeno type
+             *       etag:""//optional
+             *   },
+             *   Id:".."//guid ypoxrewtiko
+             *   //ola ta columns pou 8es na allakseis
+             *   Title: "item",
+             *   NotEditable:"edited"
+            * };
              */
             updateHostListItem: function (listTitle, item) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?" + targetStr;
@@ -373,11 +403,22 @@
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?";
                 return updateAsync(url, item);
             },
-            updateHostListField:function(listTitle,field){
+            /* updateHostListField field object example
+            *    var field = {
+		    *        ReadOnly:false,
+		    *        // more properties here
+		    *        Id:"...", // this is the fields guid, requiered
+		    *        __metadata:{
+			*            type:"SP.Field" // requiered
+			*            // may add etag 
+		    *        }
+	        *   };
+            */
+            updateHostListField: function (listTitle, field) {
                 var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields(guid'" + field.Id + "')?" + targetStr;
                 return updateAsync(url, field);
             },
-            updateAppListField:function(listTitle,field){
+            updateAppListField: function (listTitle, field) {
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Fields(guid'" + field.Id + "')?";
                 return updateAsync(url, field);
             },
@@ -416,8 +457,8 @@
                 return getFile(url);
             },
             addHostFile: function (folderName, fileName, file) {
-             var url = baseUrl + "web/GetFolderByServerRelativeUrl('"+folderName+"')/Files/Add(url='"+fileName+"',overwrite=true)?"+targetStr;
-             return addFile(url,file);
+                var url = baseUrl + "web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?" + targetStr;
+                return addFile(url, file);
             },
             addAppFile: function (folderName, fileName, file) {
                 var url = appUrl + "/_api/web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?";
@@ -525,34 +566,28 @@
             },
             createHostList: function (listObj) {
                 /* syntax example:
-                    spyreqs.jsom.createHostList({
-                        "title":app_MainListName,    
-                        "url":app_MainListName, 
-                        "template" : "genericList",
-                        "description" : "this is a list", 
-                            fields : [   
-                                {"Name":"userId", "Type":"Text", "Required":"true"},
-                                {"Name":"testId", "Type":"Text", "Required":"True"},    
-                                {"Name":"courseId", "Type":"Text"}, 
-                                {"Name":"periodId", "Type":"Text"},
-                                {"Name":"score", "Type":"Number"}, 
-                                {"Name":"scoreFinal", "Type":"Number", "hidden":"true"},
-                                {"Name":"assginedTo", "Type":"User", "Required":"true"},
-                                {"Name":"dateAssgined", "Type":"DateTime"},
-                                {"Name":"dateEnded", "Type":"DateTime"},
-                                {"Name":"canRetry", "Type":"Boolean"},
-                                {"Name":"state", "Type":"Choice", "choices" : ["rejected", "approved", "passed", "proggress"]},
-                                {"Name":"comments", "Type":"Note"},
-                                {"Name":"assginedFrom", "Type":"User"},
-                                {"Name":"testLink", "Type":"URL"}
-                            ]    
-                        })
-                    .then( ...... )             
-                    field properties: http://msdn.microsoft.com/en-us/library/office/jj246815.aspx
-                */
+					spyreqs.jsom.createHostList({
+						"title":app_MainListName,	 
+						"url":app_MainListName, 
+						"template" : "genericList",
+						"description" : "this is a list", 
+							fields : [	 
+								{"Name":"userId", "Type":"Text", "Required":"true"},								
+								{"Name":"score", "Type":"Number"}, 
+								{"Name":"scoreFinal", "Type":"Number", "hidden":"true"},
+								{"Name":"assginedTo", "Type":"User", "Required":"true"},
+								{"Name":"dateAssgined", "Type":"DateTime"},								
+								{"Name":"state", "Type":"Choice", "choices" : ["rejected", "approved", "passed", "proggress"]},
+								{"Name":"comments", "Type":"Note"},								
+								{"Name":"testLink", "Type":"URL"}
+							]	 
+						})
+					.then( ...... )				
+					field properties: http://msdn.microsoft.com/en-us/library/office/jj246815.aspx
+				*/
                 var web, theList, listCreationInfo, template, field,
-                    defer = new $.Deferred(),
-                    c = newContextInstance();
+					defer = new $.Deferred(),
+					c = newContextInstance();
 
                 if (typeof listObj.title === 'undefined') {
                     say('createHostList cannot create without .title');
@@ -588,14 +623,14 @@
                     if (listObj.fields) {
                         // start creating fields
                         $.when(jsom.createListFields(c.context, theList, listObj.fields)).then(
-                            function (data) {
-                                // create List Fields finished
-                                defer.resolve(listObj);
-                            },
-                            function (error) {
-                                defer.reject(error);
-                            }
-                        );
+							function (data) {
+							    // create List Fields finished
+							    defer.resolve(listObj);
+							},
+							function (error) {
+							    defer.reject(error);
+							}
+						);
                     } else {
                         // no fields to create
                         defer.resolve(listObj);
@@ -638,6 +673,7 @@
         },
         utils: {
             urlParamsObj: urlParamsObj,
+            buildQueryString : buildQueryString,
             say: say
         }
     };
