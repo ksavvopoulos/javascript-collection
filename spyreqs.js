@@ -95,7 +95,7 @@
                 "Accept": "application/json;odata=verbose",
                 "Content-Type": "application/json;odata=verbose",
                 "X-HTTP-Method": "MERGE",
-                "If-Match": data.__metadata.etag
+                "If-Match": (data.__metadata && data.__metadata.etag)?data.__metadata.etag:"*"
             },
             success: function (data) {
                 //data.body is an empty string
@@ -373,6 +373,14 @@
                 var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Items(" + item.Id + ")?";
                 return updateAsync(url, item);
             },
+            updateHostListField:function(listTitle,field){
+                var url = baseUrl + "web/lists/getByTitle('" + listTitle + "')/Fields(guid'" + field.Id + "')?" + targetStr;
+                return updateAsync(url, field);
+            },
+            updateAppListField:function(listTitle,field){
+                var url = appUrl + "/_api/web/lists/getByTitle('" + listTitle + "')/Fields(guid'" + field.Id + "')?";
+                return updateAsync(url, field);
+            },
             /**
              * adds a field to a Host List
              * @param {string} listGuid [the guid of the list]
@@ -414,6 +422,9 @@
             addAppFile: function (folderName, fileName, file) {
                 var url = appUrl + "/_api/web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?";
                 return addFile(url, file);
+            },
+            deleteHostFile: function (fileUrl) {
+
             }
         },
         jsom: {
