@@ -464,8 +464,14 @@
                 var url = appUrl + "/_api/web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?";
                 return addFile(url, file);
             },
-            deleteHostFile: function (fileUrl) {
-
+            /**
+             * gets the Users of the Site
+             * @param  {string} query [the query to execute e.g. "$filter=Email ne ''"] 
+             * @return {[type]}       [description]
+             */
+            getSiteUsers:function(query){
+                var url = baseUrl + "web/SiteUsers?" + checkQuery(query) + targetStr;
+                return getAsync(url);
             }
         },
         jsom: {
