@@ -472,6 +472,14 @@
             getSiteUsers:function(query){
                 var url = baseUrl + "web/SiteUsers?" + checkQuery(query) + targetStr;
                 return getAsync(url);
+            },
+            /**
+             * gets the Site's Regional Settings like DateFormat,DateSeparator,LocaleId...
+             * @param  {string} query [optional query]
+             */
+            getRegionalSettings: function(query) {
+                var url = baseUrl + "/_api/web/RegionalSettings?" + checkQuery(query) + targetStr;
+                return getAsync(url);
             }
         },
         jsom: {
