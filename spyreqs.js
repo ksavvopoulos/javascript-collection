@@ -478,7 +478,7 @@
              * @param  {string} query [optional query]
              */
             getRegionalSettings: function(query) {
-                var url = baseUrl + "/_api/web/RegionalSettings?" + checkQuery(query) + targetStr;
+                var url = baseUrl + "/web/RegionalSettings?" + checkQuery(query) + targetStr;
                 return getAsync(url);
             }
         },
