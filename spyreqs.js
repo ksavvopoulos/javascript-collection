@@ -376,7 +376,38 @@
 
 			return defer.promise();
 		},
-		getList: function () {
+		getList: function (c, listTitle, query) {
+			// not ready
+			var web, theList, result, defer = new $.Deferred();
+			
+			web = c.appContextSite.get_web();
+			theList = web.get_lists().getByTitle(listTitle);
+			result = c.context.loadQuery(theList, query);
+			c.context.executeQueryAsync(success, fail);
+
+			function success() {
+				var listEnumerator = result.getEnumerator();
+				// return result NOW
+				say("result: "+result);
+				
+				while (listEnumerator.moveNext()) {
+					var oList = listEnumerator.get_current();
+					// build html here... outside spyreqs
+				}
+				
+				
+				defer.resolve(answerBool);
+			}
+
+			function fail(sender, args) {
+				var error = {
+					sender: sender,
+					args: args
+				};
+				defer.reject(error);
+			}
+
+			return defer.promise();
 		},
 		checkList: function (c, listObj) {
 			var web, collectionList, defer = new $.Deferred();
@@ -614,31 +645,22 @@
                 );  
                 */
 				var c = newRemoteContextInstance();
-				jsom.checkList(c, listObj);
+				return jsom.checkList(c, listObj);
             },
 			checkAppList: function (listObj) { 
                 /* syntax example: see checkHostList */
 				var c = newLocalContextInstance();
-				jsom.checkList(c, listObj);
+				return jsom.checkList(c, listObj);
             },
             getHostListByTitle: function (listTitle, query) {
                 // NOT READY            
-                var web, theList, defer = new $.Deferred(),
-                    c = newRemoteContextInstance();
-
-                web = c.appContextSite.get_web();
-                theList = web.get_lists().getByTitle(listObj.Title);
-                context.load(theList);
-                context.executeQueryAsync(success, fail);
-
-                function success() {
-                    var result = theList.get_title() + ' created.';
-                    alert(result);
-                }
-
-                function fail(sender, args) {
-                    alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
-                }
+                var c = newRemoteContextInstance();
+				return jsom.getList(c, listTitle, query);               
+            },
+			getAppListByTitle: function (listTitle, query) {
+                // NOT READY            
+                var c = newLocalContextInstance();
+				return jsom.getList(c, listTitle, query);               
             },
             addHostListItem: function (listTitle, itemObj) {
                 /* example: 
@@ -648,12 +670,12 @@
                 );  
                 */              
                 var c = newRemoteContextInstance();
-				jsom.addHostListItem(c, listTitle, itemObj);
+				return jsom.addHostListItem(c, listTitle, itemObj);
             },
 			addAppListItem: function (listTitle, itemObj) {
 				/* example: see addHostListItem example */
 				var c = newLocalContextInstance();
-				jsom.addHostListItem(c, listTitle, itemObj);
+				return jsom.addHostListItem(c, listTitle, itemObj);
 			},
             createHostList: function (listObj) {
                 /* syntax example:
@@ -677,12 +699,12 @@
 					field properties: http://msdn.microsoft.com/en-us/library/office/jj246815.aspx
 				*/
 				var c = newRemoteContextInstance();
-				jsom.createList(c, listObj);               
+				return jsom.createList(c, listObj);               
             },
 			createAppList: function (listObj) {
                 /* syntax example: see createHostList example */					
 				var c = newLocalContextInstance();
-				jsom.createList(c, listObj);               
+				return jsom.createList(c, listObj);               
             },
             createHostSite: function (webToCreate) {
                 // NOT READY
