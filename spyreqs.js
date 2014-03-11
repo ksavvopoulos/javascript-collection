@@ -207,15 +207,15 @@
     queryParams = urlParamsObj();	
     if (typeof queryParams.SPAppWebUrl !== 'undefined') {
 		appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
-		if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }
-		// for rest use
-		targetStr = "&@target='" + hostUrl + "'";
-		baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
-		executor = new SP.RequestExecutor(appUrl); 
+		if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }		
 	} else { notAnApp_Flag ++; }
 	
     if (typeof queryParams.SPHostUrl !== 'undefined') {
 		hostUrl = decodeURIComponent(queryParams.SPHostUrl);
+		// for rest use
+		targetStr = "&@target='" + hostUrl + "'";
+		baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
+		executor = new SP.RequestExecutor(appUrl); 
 	} else { notAnApp_Flag ++; }
 	
 	if (notAnApp_Flag == 2) {
@@ -232,7 +232,7 @@
 		.fail(function( script, textStatus ) {
 			say('could not load: RequestExecutor.js');
 		});		 
-	}	   
+	} else if (notAnApp_Flag == 1) { say('query params is misssing'); }	   
 
     /**
      * the rest and jsom objects have methods that are not to be exposed 
