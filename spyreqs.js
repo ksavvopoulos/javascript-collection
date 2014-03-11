@@ -3,7 +3,7 @@
     var appUrl, hostUrl, queryParams,
         executor, baseUrl, targetStr,
         spyreqs, say, rest, jsom,
-		spyreqs_version = "0.0.1";
+		spyreqs_version = "0.0.2";
 
     if (typeof window.console !== 'undefined') {
         say = function (what) { window.console.log(what); };
@@ -351,7 +351,7 @@
 
 			return defer.promise();			
 		},
-		addHostListItem: function (c, listTitle, itemObj) {
+		addListItem: function (c, listTitle, itemObj) {
 			var web, theList, theListItem, prop, itemCreateInfo, defer = new $.Deferred();
 		 
 			web = c.appContextSite.get_web();
@@ -376,27 +376,19 @@
 
 			return defer.promise();
 		},
-		getList: function (c, listTitle, query) {
-			// not ready
-			var web, theList, result, defer = new $.Deferred();
-			
-			web = c.appContextSite.get_web();
-			theList = web.get_lists().getByTitle(listTitle);
-			result = c.context.loadQuery(theList, query);
+		getItems: function (c, listTitle, query) {
+			var web, theList, resultCollection;
+		
+			web = c.appContextSite.get_web(); 
+			theList = web.get_lists().getByTitle(listTitle); 
+			var camlQuery = new SP.CamlQuery();
+			camlQuery.set_viewXml(query); 		
+			resultCollection = theList.getItems(camlQuery);  
+			c.context.load(resultCollection);  
 			c.context.executeQueryAsync(success, fail);
 
 			function success() {
-				var listEnumerator = result.getEnumerator();
-				// return result NOW
-				say("result: "+result);
-				
-				while (listEnumerator.moveNext()) {
-					var oList = listEnumerator.get_current();
-					// build html here... outside spyreqs
-				}
-				
-				
-				defer.resolve(answerBool);
+				defer.resolve(resultCollection);
 			}
 
 			function fail(sender, args) {
@@ -409,7 +401,7 @@
 
 			return defer.promise();
 		},
-		checkList: function (c, listObj) {
+		checkList: function (c, listTitle) {
 			var web, collectionList, defer = new $.Deferred();
 			
 			web = c.appContextSite.get_web();
@@ -425,7 +417,7 @@
 
 				while (listEnumerator.moveNext()) {
 					var oList = listEnumerator.get_current();
-					if (oList.get_title() == listObj.Title) {
+					if (oList.get_title() == listTitle) {
 						answerBool = true;
 						break;
 					}
@@ -636,7 +628,7 @@
             }
         },
         jsom: {
-            checkHostList: function (listObj) {
+            checkHostList: function (listTitle) {
                 // This function checks if list.Title exists.
                 /* syntax example: 
                 spyreqs.jsom.checkHostList({ "Title":listName }).then(
@@ -645,19 +637,19 @@
                 );  
                 */
 				var c = newRemoteContextInstance();
-				return jsom.checkList(c, listObj);
+				return jsom.checkList(c, listTitle);
             },
-			checkAppList: function (listObj) { 
+			checkAppList: function (listTitle) { 
                 /* syntax example: see checkHostList */
 				var c = newLocalContextInstance();
-				return jsom.checkList(c, listObj);
+				return jsom.checkList(c, listTitle);
             },
-            getHostListByTitle: function (listTitle, query) {
+            getHostListItems: function (listTitle, query) {
                 // NOT READY            
                 var c = newRemoteContextInstance();
 				return jsom.getList(c, listTitle, query);               
             },
-			getAppListByTitle: function (listTitle, query) {
+			getAppListItems: function (listTitle, query) {
                 // NOT READY            
                 var c = newLocalContextInstance();
 				return jsom.getList(c, listTitle, query);               
@@ -670,12 +662,12 @@
                 );  
                 */              
                 var c = newRemoteContextInstance();
-				return jsom.addHostListItem(c, listTitle, itemObj);
+				return jsom.addListItem(c, listTitle, itemObj);
             },
 			addAppListItem: function (listTitle, itemObj) {
 				/* example: see addHostListItem example */
 				var c = newLocalContextInstance();
-				return jsom.addHostListItem(c, listTitle, itemObj);
+				return jsom.addListItem(c, listTitle, itemObj);
 			},
             createHostList: function (listObj) {
                 /* syntax example:
