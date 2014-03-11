@@ -2,8 +2,9 @@
     "use strict";
     var appUrl, hostUrl, queryParams,
         executor, baseUrl, targetStr,
-        spyreqs, say, rest, jsom,
-		spyreqs_version = "0.0.2";
+		notAnApp_Flag = 0, 
+		say, rest, jsom, 
+        spyreqs, spyreqs_version = "0.0.4";
 
     if (typeof window.console !== 'undefined') {
         say = function (what) { window.console.log(what); };
@@ -180,7 +181,7 @@
             }
             return params;
         }
-        return null;
+        return {};
     }
 
     function buildQueryString(str, param, val) {
@@ -203,14 +204,35 @@
         } return String(str + "?" + param + "=" + val);
     }
 
-    queryParams = urlParamsObj();
-    appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
-    if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }
-
-    hostUrl = decodeURIComponent(queryParams.SPHostUrl);
-    targetStr = "&@target='" + hostUrl + "'";
-    baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
-    executor = new SP.RequestExecutor(appUrl); // for rest use
+    queryParams = urlParamsObj();	
+    if (typeof queryParams.SPAppWebUrl !== 'undefined') {
+		appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
+		if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }
+		// for rest use
+		targetStr = "&@target='" + hostUrl + "'";
+		baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
+		executor = new SP.RequestExecutor(appUrl); 
+	} else { notAnApp_Flag ++; }
+	
+    if (typeof queryParams.SPHostUrl !== 'undefined') {
+		hostUrl = decodeURIComponent(queryParams.SPHostUrl);
+	} else { notAnApp_Flag ++; }
+	
+	if (notAnApp_Flag == 2) {
+		// this is not an app, so assing the proper web url to both vars
+		// Caution, always use 'App' relative functions when NOT in app
+		var url = window.location.href;
+		appUrl = hostUrl = url.substring(0,url.indexOf('/Pages'));
+		// load SP.RequestExecutor to let REST work on host site api
+		$.getScript(hostUrl + "/_layouts/15/SP.RequestExecutor.js")
+		.done(function( script, textStatus ) {
+			say('loaded: RequestExecutor.js');
+			executor = new SP.RequestExecutor(hostUrl); 
+		})
+		.fail(function( script, textStatus ) {
+			say('could not load: RequestExecutor.js');
+		});		 
+	}	   
 
     /**
      * the rest and jsom objects have methods that are not to be exposed 
@@ -377,7 +399,7 @@
 			return defer.promise();
 		},
 		getItems: function (c, listTitle, query) {
-			var web, theList, resultCollection;
+			var web, theList, resultCollection, defer = new $.Deferred();
 		
 			web = c.appContextSite.get_web(); 
 			theList = web.get_lists().getByTitle(listTitle); 
@@ -631,7 +653,7 @@
             checkHostList: function (listTitle) {
                 // This function checks if list.Title exists.
                 /* syntax example: 
-                spyreqs.jsom.checkHostList({ "Title":listName }).then(
+                spyreqs.jsom.checkHostList( "listTitle" ).then(
                     function(listExistsBool) { alert(listExistsBool); // true or false },
                     function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
                 );  
@@ -645,14 +667,26 @@
 				return jsom.checkList(c, listTitle);
             },
             getHostListItems: function (listTitle, query) {
-                // NOT READY            
+                /* Example syntax:								
+				spyreqs.jsom.getHostListItems("myClasses","<View><Query><Where><IsNotNull><FieldRef Name='ClassGuid'/></IsNotNull></Where></Query></View>").then(
+					function(resultCollection) { 
+						var listItemEnumerator = resultCollection.getEnumerator(), out=" ";
+						while (listItemEnumerator.moveNext()) {
+							var oListItem = listItemEnumerator.get_current();
+							out += oListItem.get_item('ClassStudentGroupID');
+						}	
+						alert(out);
+					},
+					function(error) { alert('getAppListItems request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
+				 ); 
+				*/        
                 var c = newRemoteContextInstance();
-				return jsom.getList(c, listTitle, query);               
+				return jsom.getItems(c, listTitle, query);               
             },
-			getAppListItems: function (listTitle, query) {
-                // NOT READY            
+			getAppListItems: function (listTitle, query) { 
+				/* Example syntax: see spyreqs.jsom.getHostListItems	 */		
                 var c = newLocalContextInstance();
-				return jsom.getList(c, listTitle, query);               
+				return jsom.getItems(c, listTitle, query);               
             },
             addHostListItem: function (listTitle, itemObj) {
                 /* example: 
