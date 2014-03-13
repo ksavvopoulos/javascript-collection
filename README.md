@@ -27,6 +27,18 @@ For all the Rest methods the query argument is optional and compliant with the O
 You can use $filter,$select and so on.
 <a href="http://msdn.microsoft.com/en-us/library/gg309461.aspx">Full documentation</a><br>
 
-<strong>spyreqs.rest.getHostLists</strong> method returns a promise which when resolved contains an <br>
-array of all the Lists in the Host Site that the App was installed. It takes an optional query argument.
+<h3>spyreqs.rest.getHostLists</h3>
+
+**usage:** gets all the Lists from the Host Site that the App was installed.<br>
+**parameters:** string query optional<br>
+**returns:**a promise which when resolved contains an array of all the Lists in the Host Site that the App was installed
+
+<br>
+example:
+```javascript
+spyreqs.rest.getHostLists(query).then(function(data){
+		var lists = data.d.results;
+		//do something with the lists
+});
+```
 
