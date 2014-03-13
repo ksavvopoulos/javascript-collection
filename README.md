@@ -147,10 +147,11 @@ spyreqs.rest.createHostList(list).then(function(data){
 **returns:** A promise that is resolved when the item is added and contains the added item or rejected if an error occurs
 ```javascript
 
-var item = {
+var listTile="Demo",
+	item = {
 	Title:"DemoItem",
 	__metadata:{
-		type:"SP.Data.DemoListListItem"
+		type:"SP.Data.DemoListItem"
 	}
 };
 
@@ -161,4 +162,174 @@ spyreqs.rest.addHostListItem(listTitle,item).then(function(data){
 });
 ```
 
+<h3>spyreqs.rest.addAppListItem</h3>
+**description:** adds an App List Item. Parameters and return value same as spyreqs.rest.addAppListItem.
 
+<h3>spyreqs.rest.deleteHostListItem</h3>
+**description:** deletes an Item in a Host List. <br>
+**parameters:** 
+<ul>
+	<li>string listTitle (required) : the title of the List</li>
+	<li>string itemId (required) : the id of the Item to delete</li>
+	<li>string etag (optional) : the etag property of the item. if not provided defaults to "*"</li>
+</ul>
+**returns:**A promise that is resolved when the item is deleted or rejected if the deletion fails.
+```javascript
+
+spyreqs.rest.deleteHostListItem(listTitle,itemId,"*").then(function(){
+	//successfully deleted
+},function(error){
+	//handle the error
+});
+```
+<h3>spyreqs.rest.deleteAppListItem</h3>
+**description:** deletes an Item in an App List. Parameters and return value same as spyreqs.rest.deleteHostListItem.
+
+<h3>spyreqs.rest.updateHostListItem</h3>
+**description:** updates an item in a Host List. <br>
+**parameters:**
+<ul>
+	<li>string listTitle (required) : the title of the List</li>
+	<li>object item (required) : the item to update. Must have the properties
+		<ul>
+			<li>string Id : the guid of the item</li>
+			<li>any property of the item you want to change</li>
+			<li>object __metadata : the metadata object must have the properties
+				<ul>
+					<li>string type: the type of the object e.g. "SP.Data.DemoListItem"</li>
+					<li>string etag (optional) : defaults to "*" </li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+</ul>
+**returns:** A promise that is resolved when the item is updated or rejected if the update fails
+```javascript
+
+spyreqs.rest.updateHostListItem(listTitle,item).then(function(){
+	//successfully updated
+},function(error){
+	//handle the error
+});
+```
+<h3>spyreqs.rest.updateAppListItem</h3>
+**description:** updates an Item in an App List. Parameters and return value same as spyreqs.rest.deleteHostListItem.
+
+<h3>spyreqs.rest.updateHostListField</h3>
+**description:** updates a Field to a Host List. <br>
+**parameters:** 
+<ul>
+	<li>string listTitle (required) : the Title of the List</li>
+	<li>object field (required) : the field to update.The field object must have the properties
+		<ul>
+			<li>string Id:the guid of the field</li>
+			<li>object __metadata: the metadata object must have the properties
+				<ul>
+					<li>string type (required): the type of the field e.g ""SP.Field""</li>
+					<li>string etag (optional): defaults to "*"</li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+</ul>
+
+<h3>spyreqs.rest.updateAppListField</h3>
+**description:** updates a Field to an App List. Parameters and return value same as spyreqs.rest.updateAppListItem.
+
+<h3>spyreqs.rest.addHostListField</h3>
+**description:** adds a Field to a Host List. <br>
+**parameters:** 
+<ul>
+	<li>string listGuid (required) : the guid of the list</li>
+	<li>string fieldType (optional) : the type of the field, defaults to the generic "SP.Field"</li>
+	<li>object field (required) : the field to add. The object must have the properties
+		<ul>
+			<li>string Title : the title of the field</li>
+			<li>number FieldTypeKind : <a href="http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.client.fieldtype.aspx">documentation about FieldTypeKind</a></li>
+			<li>boolean Required: if the field is required or not</li>
+			<li>boolean EnforceUniqueValues</li>
+			<li>string StaticName: the static name of the field</li>
+		</ul>
+	</li>
+</ul>
+**returns:** A promise that contains the added field
+
+```javascript
+
+spyreqs.rest.addHostListField(listGuid, field, fieldType).then(function(data){
+	var field = data.d;
+},function(error){
+	//handle the error
+});
+```
+
+<h3>spyreqs.rest.addAppListField</h3>
+**description:** adds a Field to a Host List. Parameters and return value same as spyreqs.rest.addAppListItem.
+
+<h3>spyreqs.rest.getCurrentUser</h3>
+**description:** gets the current user. <br>
+**parameters:** empty
+**returns:** A promise that contains an object with info about the current user, like Email and Id
+```javascript
+
+spyreqs.rest.getCurrentUser().then(function(data){
+	var currentUser = data.d;
+},function(error){
+	//handle the error
+});
+```
+
+<h3>spyreqs.rest.getHostFile</h3>
+**description:** gets a File from the Host Site.(not tested on binary files)<br>
+**parameters:**
+<ul>
+	<li>string fileUrl: the relative file url</li>
+</ul>
+**returns:** A promise that contains the file.
+```javascript
+
+spyreqs.rest.getHostFile(fileUrl).then(function(data){
+	var file = data;
+},function(error){
+	//handle the error
+});
+```
+
+<h3>spyreqs.rest.getAppFile</h3>
+**description:** gets a File from the App Site.(not tested on binary files)<br>
+Parameters and return value same as spyreqs.rest.getHostFile.
+
+<h3>spyreqs.rest.addHostFile</h3>
+**description:** adds a File to the Host Site.(not tested on binary files)<br>
+**parameters:**
+<ul>
+	<li>string folderPath: the relative url of the folder to which the file should be added</li>
+	<li>string fileName</li>
+	<li>file: the file to add</li>
+</ul>
+**returns:** A promise that contains the added file.
+```javascript
+
+spyreqs.rest.addHostFile(fileUrl).then(function(data){
+	var file = data;
+},function(error){
+	//handle the error
+});
+```
+
+<h3>spyreqs.rest.addAppFile</h3>
+**description:** adds a File to the App Site.(not tested on binary files)<br>
+Parameters and return value same as spyreqs.rest.addtHostFile.
+
+<h3>spyreqs.rest.getSiteUsers</h3>
+**description:** gets all the users of the host Site<br>
+**parameters:** empty
+**returns:** A promise that contains an array with the users of the site.
+```javascript
+
+spyreqs.rest.getSiteUsers(fileUrl).then(function(data){
+	var siteUsers = data.d.results;
+},function(error){
+	//handle the error
+});
+```

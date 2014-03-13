@@ -73,7 +73,7 @@
             headers: {
                 "Accept": "application/json;odata=verbose",
                 "X-HTTP-Method": "DELETE",
-                "If-Match": etag
+                "If-Match": etag ? etag : "*"
             },
             success: function (data) {
                 //data.body is an empty string
@@ -631,12 +631,12 @@
                 var url = appUrl + "/_api/web/GetFileByServerRelativeUrl('" + fileUrl + "')/$value?";
                 return getFile(url);
             },
-            addHostFile: function (folderName, fileName, file) {
-                var url = baseUrl + "web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?" + targetStr;
+            addHostFile: function (folderPath, fileName, file) {
+                var url = baseUrl + "web/GetFolderByServerRelativeUrl('" + folderPath + "')/Files/Add(url='" + fileName + "',overwrite=true)?" + targetStr;
                 return addFile(url, file);
             },
-            addAppFile: function (folderName, fileName, file) {
-                var url = appUrl + "/_api/web/GetFolderByServerRelativeUrl('" + folderName + "')/Files/Add(url='" + fileName + "',overwrite=true)?";
+            addAppFile: function (folderPath, fileName, file) {
+                var url = appUrl + "/_api/web/GetFolderByServerRelativeUrl('" + folderPath + "')/Files/Add(url='" + fileName + "',overwrite=true)?";
                 return addFile(url, file);
             },
             /**
