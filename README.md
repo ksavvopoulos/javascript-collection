@@ -61,7 +61,7 @@ spyreqs.rest.getHostListByTitle(listTitle,query).then(function(data){
 		//do something with the list
 });
 ```
-<h3>spyreqs.rest.getAppListByTitle<h3>
+<h3>spyreqs.rest.getAppListByTitle</h3>
 **description:** gets a List from the Host Site. Parameters and return value same as spyreqs.rest.getHostListByTitle.
 
 <h3>spyreqs.rest.getHostListItems</h3>
@@ -81,3 +81,84 @@ spyreqs.rest.getHostListItems(listTitle,query).then(function(data){
 ```
 <h3>spyreqs.rest.getAppListItems</h3>
 **description:** gets the Items from an App List. Parameters and return value same as spyreqs.rest.getHostListItems.
+
+<h3>spyreqs.rest.getHostListFields</h3>
+
+**description:** gets the Fields of a List from the Host Site. <br>
+**parameters:**
+<ul>
+	<li>string listTitle (required): the title of the list</li>
+	<li>string query (optional) : the query to execute on Items</li>
+</ul>
+**returns:** a promise which when resolved contains an object with an array of the list fields.
+
+```javascript
+spyreqs.rest.getHostListFields(listTitle,query).then(function(data){
+		var fields = data.d.results;
+		//do something with the fields
+});
+```
+<h3>spyreqs.rest.getAppListFields</h3>
+
+**description:** gets the Fields of an App List. Parameters and return value same as spyreqs.rest.getAppListFields.
+<br>
+
+<h3>spyreqs.rest.createHostList</h3>
+**description:** creates a List to the Host Site. <br>
+**parameters:**
+<ul>
+	<li>object list (required) : the list to create. the list object must have the properties
+		<ul>
+			<li>string Title : the list Title</li>
+			<li>number Template : the list Template number(for a generic SP List 100) </li>
+		</ul>
+	</li>
+</ul>
+**returns:** A promise that is resolved when the list is succesfully created and contains the created list or rejected if an error occurs.
+
+```javascript
+var list={Title:"Demo",Template:100};
+
+spyreqs.rest.createHostList(list).then(function(data){
+	var createdList = data.d;
+},function(error){
+	//handle the error
+});
+```
+<h3>spyreqs.rest.createAppList</h3>
+**description:** creates an App List. Parameters and return value same as spyreqs.rest.createHostList.
+
+<h3>spyreqs.rest.addHostListItem</h3>
+**description:** adds an Item to a Host List. <br>
+**parameters:** 
+<ul> 
+	<li>string listTitle (required): the title of the List to which the item should be added</li>
+	<li>object item (required) : the item to add.The item object must have the properies 
+		<ul>
+			<li>string Title : the Title of the item</li>
+			<li>objext __metadata: the metadata object must have the property 
+				<ul>
+					<li>string type : the type of the item</li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+</ul>
+**returns:** A promise that is resolved when the item is added and contains the added item or rejected if an error occurs
+```javascript
+
+var item = {
+	Title:"DemoItem",
+	__metadata:{
+		type:"SP.Data.DemoListListItem"
+	}
+};
+
+spyreqs.rest.addHostListItem(listTitle,item).then(function(data){
+	var addedItem = data.d;
+},function(error){
+	//handle the error
+});
+```
+
+
