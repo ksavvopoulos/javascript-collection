@@ -268,7 +268,7 @@ spyreqs.rest.addHostListField(listGuid, field, fieldType).then(function(data){
 
 <h3>spyreqs.rest.getCurrentUser</h3>
 **description:** gets the current user. <br>
-**parameters:** empty
+**parameters:** empty <br>
 **returns:** A promise that contains an object with info about the current user, like Email and Id
 ```javascript
 
@@ -323,7 +323,7 @@ Parameters and return value same as spyreqs.rest.addtHostFile.
 
 <h3>spyreqs.rest.getSiteUsers</h3>
 **description:** gets all the users of the host Site<br>
-**parameters:** empty
+**parameters:** empty <br>
 **returns:** A promise that contains an array with the users of the site.
 ```javascript
 
@@ -331,5 +331,154 @@ spyreqs.rest.getSiteUsers(fileUrl).then(function(data){
 	var siteUsers = data.d.results;
 },function(error){
 	//handle the error
+});
+```
+
+<h2>spyreqs.jsom methods</h2>
+
+<h3>spyreqs.jsom.checkHostList</h3>
+**description:** checks wether a Host list exists or not. <br>
+**parameters:**
+<ul>
+	<li>string listTitle:the list Title</li>
+</ul>
+**returns:** A promise that resolves to true if the list exists otherwise to false
+```javascript
+spyreqs.jsom.checkHostList(listTitle).then(function(data){
+	var listExists = data;
+});
+```
+
+<h3>spyreqs.jsom.checkAppList</h3>
+**description:** checks wether an App list exists or not. Parameters and return value same as spyreqs.jsom.checkHostList.<br>
+
+<h3>spyreqs.jsom.getHostListItems</h3>
+**description:** gets the items of a Host List.<br>
+**parameters:**
+<ul>
+	<li>string listTitle:the list Title</li>
+	<li>string query : the query to execute</li>
+</ul>
+**returns:** A promise that contains a collection of the items
+```javascript
+var query = "<View><Query><Where><IsNotNull><FieldRef Name='ClassGuid'/></IsNotNull></Where></Query></View>";
+
+spyreqs.jsom.getHostListItems(listTitle,query).then(function(resultCollection) { 
+	var listItemEnumerator = resultCollection.getEnumerator(),
+		out=" ";
+	
+	while (listItemEnumerator.moveNext()) {
+		var oListItem = listItemEnumerator.get_current();
+		out += oListItem.get_item('ClassStudentGroupID');
+	}	
+	alert(out);
+},
+function(error) {
+	alert('getAppListItems request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace());
+});
+```
+
+<h3>spyreqs.jsom.getAppListItems</h3>
+**description:** gets the items of an App List. Parameters and return value same as spyreqs.jsom.getAppListItems.<br>
+
+<h3>spyreqs.jsom.addHostListItem</h3>
+**description:** adds an item to a Host List.<br>
+**parameters:**
+<ul>
+	<li>string listTitle:the list Title</li>
+	<li>object itemObj : the item to add</li>
+</ul>
+**returns:** A promise that contains the id of the created item
+```javascript
+spyreqs.jsom.addHostListItem("My List", {"Title":"my item", "Score":90})
+	.then(function(itemId) {
+		alert("item was added, id:"+itemId);
+	},
+    function(error) {
+    	alert('addHostListItem request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace());
+    });
+```
+
+<h3>spyreqs.jsom.addAppListItem</h3>
+**description:** adds an item to an App List.Parameters and return value same as spyreqs.jsom.addHostListItem.
+
+<h3>spyreqs.jsom.createHostList</h3>
+**description:** creates a List to the Host Site.<br>
+**parameters:**
+<ul>
+	<li>object listObj:the list to create</li>
+</ul>
+**returns:** A promise that contains the created List
+```javascript
+var listObj = {
+	"title":"app_MainListName",	 
+	"url":"app_MainListName", 
+	"template" : "genericList",
+	"description" : "this is a list", 
+	fields : [	 
+		{"Name":"userId", "Type":"Text", "Required":"true"},								
+		{"Name":"score", "Type":"Number"}, 
+		{"Name":"scoreFinal", "Type":"Number", "hidden":"true"},
+		{"Name":"assginedTo", "Type":"User", "Required":"true"},
+		{"Name":"dateAssgined", "Type":"DateTime"},								
+		{"Name":"state", "Type":"Choice", "choices" : ["rejected", "approved", "passed", "proggress"]},
+		{"Name":"comments", "Type":"Note"},								
+		{"Name":"testLink", "Type":"URL"}
+	]	 
+};
+
+spyreqs.jsom.createHostList(listObj)
+	.then(function(data){
+		//success
+	},function(error){
+		//error
+	});	
+```
+
+<h3>spyreqs.jsom.createAppList</h3>
+**description:** creates a List to the App Site.Parameters and return value same as spyreqs.jsom.createHostList.<br>
+
+<h2>spyreqs.utils methods</h2>
+
+<h3>spyreqs.utils.urlParamsObj</h3>
+**description:** gets the url parameters. <br>
+**parameters:** empty. <br>
+**returns:**  an object with the url parameters as key, value
+```javascript
+//for example if the url is http://www.example.com?user=adam&email=adam@gmail.cmom
+//then
+var params = spyreqs.utils.urlParamsObj();
+//params = {user:adam,email:adam@gmail.com}
+```
+
+<h3>spyreqs.utils.buildQueryString</h3>
+**description:** builds a query string <br>
+**parameters:**
+<ul>
+	<li>string str : the string to which the query string is added</li>
+	<li>string param : the parameter to add to the query string</li>
+	<li>string or number or boolean val : the value of the parameter to add to the query string</li>
+</ul>
+**returns:**  a query string
+
+<h3>spyreqs.utils.say</h3>
+**description:** a safe way to log to the console, because it checks first if there is the console<br>
+and if it has the log method
+**parameters:**
+<ul>
+	<li>anything you want to log</li>
+</ul>
+**returns:** nothing
+
+<h3>spyreqs.utils.getRegionalSettings</h3>
+**description:** gets the Regional settings like DateFormat,localeId etc. <br>
+**parameters:**
+<ul>
+	<li>string query:the query to execute</li>
+</ul>
+**returns:** A promise that contains an object with the regionalSettings
+```javascript
+spyreqs.utils.getRegionalSettings(query).then(function(data){
+	var regionalSettings = data.d;
 });
 ```
