@@ -31,7 +31,7 @@ You can use $filter,$select and so on.
 
 **description:** gets all the Lists from the Host Site that the App was installed.<br>
 **parameters:** 
-	..*string query (optional): the query to execute<br>
+	- string query (optional): the query to execute<br>
 **returns:** a promise which when resolved contains an object with an array of lists.
 
 ```javascript
@@ -46,8 +46,8 @@ spyreqs.rest.getHostLists(query).then(function(data){
 <h3>spyreqs.rest.getHostListByTitle</h3>
 **description:** gets a List from the Host Site.<br>
 **parameters:**
-	..*string listTitle (required) : the title of the list to get
-	..*string query (optional): the query to execute
+	- string listTitle (required) : the title of the list to get
+	- string query (optional): the query to execute
 <br>
 **returns:**  a promise which when resolved contains an object the list. 
 ```javascript
@@ -62,8 +62,8 @@ spyreqs.rest.getHostListByTitle(listTitle,query).then(function(data){
 <h3>spyreqs.rest.getHostListItems</h3>
 **description:** gets the Items of a List from the Host Site.
 **parameters:** 
-	..*string listTitle (required): the title of the list
-	..*string query (optional): the query to execute on items
+	- string listTitle (required): the title of the list
+	- string query (optional): the query to execute on items
 **returns:** a promise which when resolved contains an object with an array of the list items.
 ```javascript
 spyreqs.rest.getHostListItems(listTitle,query).then(function(data){
