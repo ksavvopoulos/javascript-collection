@@ -65,7 +65,7 @@ spyreqs.rest.getHostListByTitle(listTitle,query).then(function(data){
 **description:** gets a List from the Host Site. Parameters and return value same as spyreqs.rest.getHostListByTitle.
 
 <h3>spyreqs.rest.getHostListItems</h3>
-**description:** gets the Items of a List from the Host Site.
+**description:** gets the Items of a List from the Host Site.<br>
 **parameters:**
 <ul>
 	<li>string listTitle (required): the title of the list</li>
