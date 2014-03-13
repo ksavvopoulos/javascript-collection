@@ -31,7 +31,9 @@ You can use $filter,$select and so on.
 
 **description:** gets all the Lists from the Host Site that the App was installed.<br>
 **parameters:** 
-	- string query (optional): the query to execute<br>
+	<ul>
+	<li>string query (optional): the query to execute</li>
+	</ul>
 **returns:** a promise which when resolved contains an object with an array of lists.
 
 ```javascript
@@ -46,10 +48,13 @@ spyreqs.rest.getHostLists(query).then(function(data){
 <h3>spyreqs.rest.getHostListByTitle</h3>
 **description:** gets a List from the Host Site.<br>
 **parameters:**
-	- string listTitle (required) : the title of the list to get
-	- string query (optional): the query to execute
-<br>
-**returns:**  a promise which when resolved contains an object the list. 
+<ul>
+	<li>string listTitle (required) : the title of the list to get</li>
+	<li>string query (optional): the query to execute</li>
+</ul>
+
+**returns:**  a promise which when resolved contains an object the list.
+
 ```javascript
 spyreqs.rest.getHostListByTitle(listTitle,query).then(function(data){
 		var list = data.d;
@@ -61,16 +66,18 @@ spyreqs.rest.getHostListByTitle(listTitle,query).then(function(data){
 
 <h3>spyreqs.rest.getHostListItems</h3>
 **description:** gets the Items of a List from the Host Site.
-**parameters:** 
-	- string listTitle (required): the title of the list
-	- string query (optional): the query to execute on items
+**parameters:**
+<ul>
+	<li>string listTitle (required): the title of the list</li>
+	<li>string query (optional): the query to execute on items</li>
+</ul>
 **returns:** a promise which when resolved contains an object with an array of the list items.
+
 ```javascript
 spyreqs.rest.getHostListItems(listTitle,query).then(function(data){
 		var items = data.d.results;
 		//do something with the items
 });
 ```
-
 <h3>spyreqs.rest.getAppListItems</h3>
 **description:** gets the Items from an App List. Parameters and return value same as spyreqs.rest.getHostListItems.
