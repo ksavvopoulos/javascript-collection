@@ -21,12 +21,12 @@ reults of both app methods and host methods are identical for each case there wi
 documentation for one of them. All spyreqs.rest and spyreqs.jsom methods return jQuery promises <br>
 which are compatible with Q promises library and the subset of Q contained in Angular Framework.
 
-<h2>spyreqs.rest methods<h2>
-	For all the Rest methods the query argument is optional and compliant with the OData query operators.
-	<br>
-	You can use $filter,$select and so on.
-	<a href="http://msdn.microsoft.com/en-us/library/gg309461.aspx">Full documentation</a>
+<h2>spyreqs.rest methods</h2>
+For all the Rest methods the query argument is optional and compliant with the OData query operators.
+<br>
+You can use $filter,$select and so on.
+<a href="http://msdn.microsoft.com/en-us/library/gg309461.aspx">Full documentation</a><br>
 
-	**spyreqs.rest.getHostLists** method returns a promise which when resolved contains an array<br>
-	of all the Lists in the Host Site that the App was installed. It takes an optional query argument
+<strong>spyreqs.rest.getHostLists</strong> method returns a promise which when resolved contains an <br>
+array of all the Lists in the Host Site that the App was installed. It takes an optional query argument.
 
