@@ -491,6 +491,8 @@
                     function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
                 );  
                 */
+               
+               //listObj must be changed to listStr
                 var web, collectionList,
                     defer = new $.Deferred(),
                     c = newContextInstance();
