@@ -2,8 +2,7 @@ javascript-collection
 =====================
 
 Spyreqs is a library that contains general purpose methods useful for interacting with<br>
-the sharepoint lists and files.It is dependent only on the jQuery and the SP.RequestExecutor<br>
-which if not present spyreqs will attempt to fetch on its own. 
+the sharepoint lists and files.It is dependent on the jQuery.
 
 The spyreqs library exposes to the window the spyreqs object which has three properties:<br>
 
@@ -16,8 +15,8 @@ The spyreqs library exposes to the window the spyreqs object which has three pro
 
 Both spyreqs.rest and spyreqs.jsom contains methods that refers either to the <br>
 Application scope or to the Host Site scope. If the method is for use in the App scope <br>
-then it contains 'App' in its name otherwise it contains 'Host'. Because use, arguments and <br>
-reults of both app methods and host methods are identical for each case there will be <br>
+then it contains 'App' in its name otherwise it contains 'Host'. Because description, parameters and <br>
+results of both app methods and host methods are identical for each case there will be <br>
 documentation for one of them. All spyreqs.rest and spyreqs.jsom methods return jQuery promises <br>
 which are compatible with Q promises library and the subset of Q contained in Angular Framework.
 
@@ -213,7 +212,7 @@ spyreqs.rest.updateHostListItem(listTitle,item).then(function(){
 });
 ```
 <h3>spyreqs.rest.updateAppListItem</h3>
-**description:** updates an Item in an App List. Parameters and return value same as spyreqs.rest.deleteHostListItem.
+**description:** updates an Item in an App List. Parameters and return value same as spyreqs.rest.updateHostListItem.
 
 <h3>spyreqs.rest.updateHostListField</h3>
 **description:** updates a Field to a Host List. <br>
@@ -234,7 +233,7 @@ spyreqs.rest.updateHostListItem(listTitle,item).then(function(){
 </ul>
 
 <h3>spyreqs.rest.updateAppListField</h3>
-**description:** updates a Field to an App List. Parameters and return value same as spyreqs.rest.updateAppListItem.
+**description:** updates a Field to an App List. Parameters and return value same as spyreqs.rest.updateHostListField.
 
 <h3>spyreqs.rest.addHostListField</h3>
 **description:** adds a Field to a Host List. <br>
@@ -264,7 +263,7 @@ spyreqs.rest.addHostListField(listGuid, field, fieldType).then(function(data){
 ```
 
 <h3>spyreqs.rest.addAppListField</h3>
-**description:** adds a Field to a Host List. Parameters and return value same as spyreqs.rest.addAppListItem.
+**description:** adds a Field to a Host List. Parameters and return value same as spyreqs.rest.addHostListField.
 
 <h3>spyreqs.rest.getCurrentUser</h3>
 **description:** gets the current user. <br>
@@ -319,7 +318,7 @@ spyreqs.rest.addHostFile(fileUrl).then(function(data){
 
 <h3>spyreqs.rest.addAppFile</h3>
 **description:** adds a File to the App Site.(not tested on binary files)<br>
-Parameters and return value same as spyreqs.rest.addtHostFile.
+Parameters and return value same as spyreqs.rest.addHostFile.
 
 <h3>spyreqs.rest.getSiteUsers</h3>
 **description:** gets all the users of the host Site<br>
@@ -379,7 +378,7 @@ function(error) {
 ```
 
 <h3>spyreqs.jsom.getAppListItems</h3>
-**description:** gets the items of an App List. Parameters and return value same as spyreqs.jsom.getAppListItems.<br>
+**description:** gets the items of an App List. Parameters and return value same as spyreqs.jsom.getHostListItems.<br>
 
 <h3>spyreqs.jsom.addHostListItem</h3>
 **description:** adds an item to a Host List.<br>
@@ -463,7 +462,7 @@ var params = spyreqs.utils.urlParamsObj();
 
 <h3>spyreqs.utils.say</h3>
 **description:** a safe way to log to the console, because it checks first if there is the console<br>
-and if it has the log method
+and if it has the log method <br>
 **parameters:**
 <ul>
 	<li>anything you want to log</li>
