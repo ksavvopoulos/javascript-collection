@@ -4,7 +4,7 @@
         executor, baseUrl, targetStr,
 		notAnApp_Flag = 0, 
 		say, rest, jsom, 
-        spyreqs, spyreqs_version = "0.0.5";
+        spyreqs, spyreqs_version = "0.0.6";
 
     if (typeof window.console !== 'undefined') {
         say = function (what) { window.console.log(what); };
@@ -73,7 +73,7 @@
             headers: {
                 "Accept": "application/json;odata=verbose",
                 "X-HTTP-Method": "DELETE",
-                "If-Match": etag
+                "If-Match": etag ? etag : "*"
             },
             success: function (data) {
                 //data.body is an empty string
