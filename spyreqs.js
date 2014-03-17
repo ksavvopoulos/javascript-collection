@@ -2,9 +2,7 @@
     "use strict";
     var appUrl, hostUrl, queryParams,
         executor, baseUrl, targetStr,
-		notAnApp_Flag = 0, 
-		say, rest, jsom, 
-        spyreqs, spyreqs_version = "0.0.6";
+        spyreqs, say, rest, jsom;
 
     if (typeof window.console !== 'undefined') {
         say = function (what) { window.console.log(what); };
@@ -73,7 +71,7 @@
             headers: {
                 "Accept": "application/json;odata=verbose",
                 "X-HTTP-Method": "DELETE",
-                "If-Match": etag ? etag : "*"
+                "If-Match": etag
             },
             success: function (data) {
                 //data.body is an empty string
@@ -143,12 +141,10 @@
         return query;
     }
 
-    function newRemoteContextInstance() {
+    function newContextInstance() {
         // for jsom use. Return an object with new instances for clear async requests
         var returnObj = {}, context, factory, appContextSite;
-		if (!SP.ClientContext) {
-			say("SP.ClientContext not loaded"); return null;
-		}
+
         context = new SP.ClientContext(appUrl);
         factory = new SP.ProxyWebRequestExecutorFactory(appUrl);
         context.set_webRequestExecutorFactory(factory);
@@ -157,19 +153,6 @@
         returnObj.context = context;
         returnObj.factory = factory;
         returnObj.appContextSite = appContextSite;
-        return returnObj;
-    }
-	
-	function newLocalContextInstance() {
-        // for jsom use. Return an object with new instances for clear async requests        
-		var returnObj = {}, context, appContextSite;
-		if (!SP.ClientContext) {
-			say("SP.ClientContext not loaded"); return null;
-		}
-        context = new SP.ClientContext(appUrl);    
-        returnObj.context = context;
-		// nasty hack safelly find the obj
-		returnObj.appContextSite = context;
         return returnObj;
     }
 
@@ -186,7 +169,7 @@
             }
             return params;
         }
-        return {};
+        return null;
     }
 
     function buildQueryString(str, param, val) {
@@ -209,45 +192,18 @@
         } return String(str + "?" + param + "=" + val);
     }
 
-    queryParams = urlParamsObj();	
-    if (typeof queryParams.SPAppWebUrl !== 'undefined') {
-		appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
-		if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }		
-	} else { notAnApp_Flag ++; }
-	
-    if (typeof queryParams.SPHostUrl !== 'undefined') {
-		hostUrl = decodeURIComponent(queryParams.SPHostUrl);
-		// for rest use
-		targetStr = "&@target='" + hostUrl + "'";
-		baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
-		executor = new SP.RequestExecutor(appUrl); 
-	} else { notAnApp_Flag ++; }
-	
-	if (notAnApp_Flag == 2) {
-		// this is not an app, so assing the proper web url to both vars
-		// Caution, always use 'App' relative functions when NOT in app
-		var url = window.location.href;
-		appUrl = hostUrl = url.substring(0,url.indexOf('/Pages'));
-		// load SP.RequestExecutor to let REST work on host site api
-		$.getScript(hostUrl + "/_layouts/15/SP.RequestExecutor.js")
-		.done(function( script, textStatus ) {
-			say('loaded: RequestExecutor.js');
-			executor = new SP.RequestExecutor(hostUrl); 
-		})
-		.fail(function( script, textStatus ) {
-			say('could not load: RequestExecutor.js');
-		});		
-		// load sp.js for jsom use if not already loadad
-		if (!SP.ClientContext) { 
-			SP.SOD.executeFunc('sp.js', 'SP.ClientContext.get_current', 
-				function(){ say('loaded: sp.js'); }
-			);
-		} else { say('sp.js is already loaded') }
-	} else if (notAnApp_Flag == 1) { say('query param (SPHostUrl or SPAppWebUrl) is misssing'); }	   
+    queryParams = urlParamsObj();
+    appUrl = decodeURIComponent(queryParams.SPAppWebUrl);
+    if (appUrl.indexOf('#') !== -1) { appUrl = appUrl.split('#')[0]; }
+
+    hostUrl = decodeURIComponent(queryParams.SPHostUrl);
+    targetStr = "&@target='" + hostUrl + "'";
+    baseUrl = appUrl + "/_api/SP.AppContextSite(@target)/";
+    executor = new SP.RequestExecutor(appUrl); // for rest use
 
     /**
-     * the rest and jsom objects have methods that are not to be exposed 
-	 * and are used only from the spyreqs.rest / spyreqs.jsom methods
+     * the rest object has methods that are not to be exposed and are used
+     * only from the spyreqs.rest methods
      */
     rest = {
         createList: function (url, list) {
@@ -325,159 +281,7 @@
             }
 
             return defer.promise();
-        },
-		createList: function (c, listObj) {				
-			var web, theList, listCreationInfo, template, field, defer = new $.Deferred();				
-			
-			web = c.appContextSite.get_web();
-			listCreationInfo = new SP.ListCreationInformation();
-			listCreationInfo.set_title(listObj.title);
-
-			if (typeof listObj.title === 'undefined') {
-				say('createList cannot create without .title');
-				return;
-			}
-			if (typeof listObj.url !== 'undefined') { listCreationInfo.set_url(listObj.url); }
-			if (typeof listObj.description !== 'undefined') { listCreationInfo.set_description(listObj.description); }
-
-			if (typeof listObj.template === 'undefined') {
-				template = SP.ListTemplateType.genericList;
-			} else if (isNaN(listObj.template)) {
-				template = SP.ListTemplateType[listObj.template];
-			} else {
-				template = listObj.template;
-			}
-
-			listCreationInfo.set_templateType(template);
-			//say("list template number: " + template);
-			if (typeof listObj.quickLaunchOption !== 'undefined') {
-				// option to show list in quick actions menu
-				listCreationInfo.set_quickLaunchOption(listObj.quickLaunchOption);
-			}
-			theList = web.get_lists().add(listCreationInfo);
-			c.context.load(theList);
-			c.context.executeQueryAsync(success, fail);
-
-			function success() {
-				// list created
-				if (listObj.fields) {
-					// start creating fields
-					$.when(jsom.createListFields(c.context, theList, listObj.fields)).then(
-						function (data) {
-							// create List Fields finished
-							defer.resolve(listObj);
-						},
-						function (error) {
-							defer.reject(error);
-						}
-					);
-				} else {
-					// no fields to create
-					defer.resolve(listObj);
-				}
-			}
-
-			function fail(sender, args) {
-				var error = { sender: sender, args: args };
-				defer.reject(error);
-			}
-
-			return defer.promise();			
-		},
-		addListItem: function (c, listTitle, itemObj) {
-			var web, theList, theListItem, prop, itemCreateInfo, defer = new $.Deferred();
-		 
-			web = c.appContextSite.get_web();
-			theList = web.get_lists().getByTitle(listTitle);
-			itemCreateInfo = new SP.ListItemCreationInformation();
-			theListItem = theList.addItem(itemCreateInfo);
-			for (prop in itemObj) {
-				theListItem.set_item(prop, itemObj[prop]);
-			}
-			theListItem.update();
-			c.context.load(theListItem);
-			c.context.executeQueryAsync(success, fail);
-
-			function success() {
-				defer.resolve(theListItem.get_id());
-			}
-
-			function fail(sender, args) {
-				var error = { sender: sender, args: args };
-				defer.reject(error);
-			}
-
-			return defer.promise();
-		},
-		getItems: function (c, listTitle, query) {
-			var web, theList, resultCollection, defer = new $.Deferred();
-		
-			web = c.appContextSite.get_web(); 
-			theList = web.get_lists().getByTitle(listTitle); 
-			var camlQuery = new SP.CamlQuery();
-			camlQuery.set_viewXml(query); 		
-			resultCollection = theList.getItems(camlQuery);  
-			c.context.load(resultCollection);  
-			c.context.executeQueryAsync(success, fail);
-
-			function success() {
-				defer.resolve(resultCollection);
-			}
-
-			function fail(sender, args) {
-				var error = {
-					sender: sender,
-					args: args
-				};
-				defer.reject(error);
-			}
-
-			return defer.promise();
-		},
-		checkList: function (c, listTitle) {
-			var web, collectionList, defer = new $.Deferred();
-			
-			if (!c) {
-				// SP.ClientContext not loaded, c is null
-				var args = { 
-					get_message : function() { return "SP.ClientContext not loaded"; },		
-					get_stackTrace : function() { return null; }	
-				};				 
-				setTimeout( fail(null,args), 500 );
-				return defer.promise();				
-			}
-			
-			web = c.appContextSite.get_web();
-			collectionList = web.get_lists();
-			// this will only load Title, no other list properties
-			c.context.load(collectionList, 'Include(Title)');
-			c.context.executeQueryAsync(success, fail);
-
-			function success() {
-				var listInfo = '',
-					answerBool = false,
-					listEnumerator = collectionList.getEnumerator();
-
-				while (listEnumerator.moveNext()) {
-					var oList = listEnumerator.get_current();
-					if (oList.get_title() == listTitle) {
-						answerBool = true;
-						break;
-					}
-				}
-				defer.resolve(answerBool);
-			}
-
-			function fail(sender, args) {
-				var error = {
-					sender: sender,
-					args: args
-				};
-				defer.reject(error);
-			}
-
-			return defer.promise();
-		}
+        }
     };
 
     spyreqs = {
@@ -668,50 +472,78 @@
             getSiteUsers:function(query){
                 var url = baseUrl + "web/SiteUsers?" + checkQuery(query) + targetStr;
                 return getAsync(url);
+            },
+            /**
+             * gets the Site's Regional Settings like DateFormat,DateSeparator,LocaleId...
+             * @param  {string} query [optional query]
+             */
+            getRegionalSettings: function(query) {
+                var url = baseUrl + "/web/RegionalSettings?" + checkQuery(query) + targetStr;
+                return getAsync(url);
             }
         },
         jsom: {
-            checkHostList: function (listTitle) {
+            checkHostList: function (listObj) {
                 // This function checks if list.Title exists.
                 /* syntax example: 
-                spyreqs.jsom.checkHostList( "listTitle" ).then(
+                spyreqs.jsom.checkHostList({ "Title":listName }).then(
                     function(listExistsBool) { alert(listExistsBool); // true or false },
                     function(error) { alert('checkHostList request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
                 );  
                 */
-				var c = newRemoteContextInstance();
-				// if SP.ClientContext is not loaded, c will be null. 
-				// But, send the promise and let disolve there
-				return jsom.checkList(c, listTitle);				
+                var web, collectionList,
+                    defer = new $.Deferred(),
+                    c = newContextInstance();
+
+                web = c.appContextSite.get_web();
+                collectionList = web.get_lists();
+                // this will only load Title, no other list properties
+                c.context.load(collectionList, 'Include(Title)');
+                c.context.executeQueryAsync(success, fail);
+
+                function success() {
+                    var listInfo = '',
+                        answerBool = false,
+                        listEnumerator = collectionList.getEnumerator();
+
+                    while (listEnumerator.moveNext()) {
+                        var oList = listEnumerator.get_current();
+                        if (oList.get_title() == listObj.Title) {
+                            answerBool = true;
+                            break;
+                        }
+                    }
+                    defer.resolve(answerBool);
+                }
+
+                function fail(sender, args) {
+                    var error = {
+                        sender: sender,
+                        args: args
+                    };
+                    defer.reject(error);
+                }
+
+                return defer.promise();
             },
-			checkAppList: function (listTitle) { 
-                /* syntax example: see checkHostList */
-				var c = newLocalContextInstance();
-				// if SP.ClientContext is not loaded, c will be null. 
-				// But, send the promise and let disolve there
-				return jsom.checkList(c, listTitle);
-            },
-            getHostListItems: function (listTitle, query) {
-                /* Example syntax:								
-				spyreqs.jsom.getHostListItems("myClasses","<View><Query><Where><IsNotNull><FieldRef Name='ClassGuid'/></IsNotNull></Where></Query></View>").then(
-					function(resultCollection) { 
-						var listItemEnumerator = resultCollection.getEnumerator(), out=" ";
-						while (listItemEnumerator.moveNext()) {
-							var oListItem = listItemEnumerator.get_current();
-							out += oListItem.get_item('ClassStudentGroupID');
-						}	
-						alert(out);
-					},
-					function(error) { alert('getAppListItems request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
-				 ); 
-				*/        
-                var c = newRemoteContextInstance();
-				return jsom.getItems(c, listTitle, query);               
-            },
-			getAppListItems: function (listTitle, query) { 
-				/* Example syntax: see spyreqs.jsom.getHostListItems	 */		
-                var c = newLocalContextInstance();
-				return jsom.getItems(c, listTitle, query);               
+            getHostListByTitle: function (listTitle, query) {
+                // NOT READY            
+                var web, theList, defer = new $.Deferred(),
+                    c = newContextInstance();
+
+                web = c.appContextSite.get_web();
+                theList = web.get_lists().getByTitle(listObj.Title);
+                context.load(theList);
+                context.executeQueryAsync(success, fail);
+
+                function success() {
+                    var result = theList.get_title() + ' created.';
+                    alert(result);
+                }
+
+                function fail(sender, args) {
+                    alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+                }
             },
             addHostListItem: function (listTitle, itemObj) {
                 /* example: 
@@ -719,15 +551,33 @@
                     function(itemId) { alert("item was added, id:"+itemId); },
                     function(error) { alert('addHostListItem request failed. ' +  error.args.get_message() + '\n' + error.args.get_stackTrace() ); }
                 );  
-                */              
-                var c = newRemoteContextInstance();
-				return jsom.addListItem(c, listTitle, itemObj);
+                */
+                var web, theList, theListItem, prop, itemCreateInfo,
+                    defer = new $.Deferred(),
+                    c = newContextInstance();
+
+                web = c.appContextSite.get_web();
+                theList = web.get_lists().getByTitle(listTitle);
+                itemCreateInfo = new SP.ListItemCreationInformation();
+                theListItem = theList.addItem(itemCreateInfo);
+                for (prop in itemObj) {
+                    theListItem.set_item(prop, itemObj[prop]);
+                }
+                theListItem.update();
+                c.context.load(theListItem);
+                c.context.executeQueryAsync(success, fail);
+
+                function success() {
+                    defer.resolve(theListItem.get_id());
+                }
+
+                function fail(sender, args) {
+                    var error = { sender: sender, args: args };
+                    defer.reject(error);
+                }
+
+                return defer.promise();
             },
-			addAppListItem: function (listTitle, itemObj) {
-				/* example: see addHostListItem example */
-				var c = newLocalContextInstance();
-				return jsom.addListItem(c, listTitle, itemObj);
-			},
             createHostList: function (listObj) {
                 /* syntax example:
 					spyreqs.jsom.createHostList({
@@ -749,13 +599,64 @@
 					.then( ...... )				
 					field properties: http://msdn.microsoft.com/en-us/library/office/jj246815.aspx
 				*/
-				var c = newRemoteContextInstance();
-				return jsom.createList(c, listObj);               
-            },
-			createAppList: function (listObj) {
-                /* syntax example: see createHostList example */					
-				var c = newLocalContextInstance();
-				return jsom.createList(c, listObj);               
+                var web, theList, listCreationInfo, template, field,
+					defer = new $.Deferred(),
+					c = newContextInstance();
+
+                if (typeof listObj.title === 'undefined') {
+                    say('createHostList cannot create without .title');
+                    return;
+                }
+                web = c.appContextSite.get_web();
+                listCreationInfo = new SP.ListCreationInformation();
+                listCreationInfo.set_title(listObj.title);
+
+                if (typeof listObj.url !== 'undefined') { listCreationInfo.set_url(listObj.url); }
+                if (typeof listObj.description !== 'undefined') { listCreationInfo.set_description(listObj.description); }
+
+                if (typeof listObj.template === 'undefined') {
+                    template = SP.ListTemplateType.genericList;
+                } else if (isNaN(listObj.template)) {
+                    template = SP.ListTemplateType[listObj.template];
+                } else {
+                    template = listObj.template;
+                }
+
+                listCreationInfo.set_templateType(template);
+                //say("list template number: " + template);
+                if (typeof listObj.quickLaunchOption !== 'undefined') {
+                    // option to show list in quick actions menu
+                    listCreationInfo.set_quickLaunchOption(listObj.quickLaunchOption);
+                }
+                theList = web.get_lists().add(listCreationInfo);
+                c.context.load(theList);
+                c.context.executeQueryAsync(success, fail);
+
+                function success() {
+                    // list created
+                    if (listObj.fields) {
+                        // start creating fields
+                        $.when(jsom.createListFields(c.context, theList, listObj.fields)).then(
+							function (data) {
+							    // create List Fields finished
+							    defer.resolve(listObj);
+							},
+							function (error) {
+							    defer.reject(error);
+							}
+						);
+                    } else {
+                        // no fields to create
+                        defer.resolve(listObj);
+                    }
+                }
+
+                function fail(sender, args) {
+                    var error = { sender: sender, args: args };
+                    defer.reject(error);
+                }
+
+                return defer.promise();
             },
             createHostSite: function (webToCreate) {
                 // NOT READY
@@ -787,18 +688,8 @@
         utils: {
             urlParamsObj: urlParamsObj,
             buildQueryString : buildQueryString,
-            say: say,
-			/**
-             * gets the Site's Regional Settings like DateFormat,DateSeparator,LocaleId...
-             * @param  {string} query [optional query]
-			 * example: getRegionalSettings("$select=DateSeperator,LocaleId");			 
-             */
-            getRegionalSettings: function(query) {
-                var url = baseUrl + "/web/RegionalSettings?" + checkQuery(query) + targetStr;
-                return getAsync(url);
-            }
-        },
-		version : function () { say ("Hello, spyreqs ver " + spyreqs_version); }
+            say: say
+        }
     };
 
     // liberate scope...
