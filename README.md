@@ -1,6 +1,9 @@
 javascript-collection
 =====================
 
+This repository is no longer maintained.<br>
+Please visit <a href="https://github.com/inedu/spyreqs">InEdu SPyReqs.js</a><br><br>
+
 Spyreqs is a library that contains general purpose methods useful for interacting with<br>
 the sharepoint lists and files.It is dependent on the jQuery.
 
